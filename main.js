@@ -6,6 +6,8 @@ let teams = [], matches = [], sheetId = DEFAULT_SHEET_ID, isConnected = false;
 
 window.onload = () => {
     document.getElementById('sheet-id').value = DEFAULT_SHEET_ID;
+    // Hide setup on load, show only if "setup" tab is clicked
+    document.getElementById('setup-section').classList.remove('active');
 };
 
 function updateStatus(message, type = 'loading') {
@@ -74,7 +76,10 @@ async function loadData() {
         }
         isConnected = true;
         updateStatus('✅ Connected to Google Sheets - Data loaded successfully!', 'connected');
-        updateTeamSelects(); updateTeamsList(); updateStandings(); updateMatchesList();
+        updateTeamSelects();
+        updateTeamsList();
+        updateStandings();
+        updateMatchesList();
     } catch (error) {
         console.error('Error loading data:', error);
         updateStatus('❌ Error connecting to Google Sheets. Check your Sheet ID and make sure it\'s public.', 'error');
@@ -92,6 +97,7 @@ function updateTeamSelects() {
         team2Select.innerHTML += `<option value="${team}">${team}</option>`;
     });
 }
+
 function updateTeamsList() {
     const teamsList = document.getElementById('teams-list');
     teamsList.innerHTML = '';
@@ -99,6 +105,7 @@ function updateTeamsList() {
         teamsList.innerHTML += `<tr><td>${team}</td></tr>`;
     });
 }
+
 async function addTeam() {
     if (!isConnected) { alert('Please connect to Google Sheets first'); return; }
     const teamName = document.getElementById('team-name').value.trim();
@@ -110,11 +117,11 @@ async function addTeam() {
     }
     updateStatus('Adding team...');
     try {
-        const response = await fetch('YOUR_SCRIPT_URL?sheet=Teams', {
+        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=Teams`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ row: ['RCB'] })
-          })          
+            body: JSON.stringify({ row: [teamName] })
+        });
         const text = await response.text();
         if (text === 'Success') {
             updateStatus('✅ Team added!', 'connected');
@@ -127,6 +134,7 @@ async function addTeam() {
         updateStatus('❌ Failed to add team (network error)', 'error');
     }
 }
+
 async function addMatch() {
     if (!isConnected) { alert('Please connect to Google Sheets first'); return; }
     const team1 = document.getElementById('team1').value;
@@ -162,6 +170,7 @@ async function addMatch() {
         updateStatus('❌ Failed to add match (network error)', 'error');
     }
 }
+
 function calculateNRR(teamName) {
     let runsScored = 0, oversPlayed = 0, runsConceded = 0, oversBowled = 0;
     matches.forEach(match => {
@@ -180,6 +189,7 @@ function calculateNRR(teamName) {
     if (oversPlayed === 0 || oversBowled === 0) return 0;
     return ((runsScored / oversPlayed) - (runsConceded / oversBowled)).toFixed(3);
 }
+
 function getTeamStats(teamName) {
     let played = 0, won = 0, lost = 0;
     matches.forEach(match => {
@@ -191,6 +201,7 @@ function getTeamStats(teamName) {
     });
     return { played, won, lost, points: won * 2 };
 }
+
 function updateStandings() {
     const standingsBody = document.getElementById('standings-body');
     const standings = [];
@@ -216,6 +227,7 @@ function updateStandings() {
         `;
     });
 }
+
 function updateMatchesList() {
     const matchesList = document.getElementById('matches-list');
     matchesList.innerHTML = '';
@@ -236,9 +248,9 @@ function updateMatchesList() {
         `;
     });
 }
+
 // Form listeners
 document.getElementById('team-form').addEventListener('submit', function (e) { e.preventDefault(); addTeam(); });
 document.getElementById('match-form').addEventListener('submit', function (e) { e.preventDefault(); addMatch(); });
 // Auto-refresh every 30 seconds when connected
 setInterval(() => { if (isConnected) loadData(); }, 30000);
-
