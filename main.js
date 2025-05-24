@@ -110,11 +110,11 @@ async function addTeam() {
     }
     updateStatus('Adding team...');
     try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?sheet=Teams`, {
+        const response = await fetch('YOUR_SCRIPT_URL?sheet=Teams', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ row: [teamName] })
-        });
+            body: JSON.stringify({ row: ['RCB'] })
+          })          
         const text = await response.text();
         if (text === 'Success') {
             updateStatus('✅ Team added!', 'connected');
