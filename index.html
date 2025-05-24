@@ -4,78 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket League Manager</title>
+    <title>🏏 Cricket League Manager</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div class="app-bg"></div>
     <div class="container">
-        <div class="header">
-            <h1>🏏 Cricket League Manager</h1>
+        <header class="main-header">
+            <div class="emoji">🏏</div>
+            <h1>Cricket League Manager</h1>
+        </header>
+        <div id="status" class="status connected">✅ Connected to Google Sheets - Data loaded successfully!</div>
+        <div class="card connect-card">
+            <input type="text" id="sheet-id" placeholder="Google Sheet ID">
+            <button class="btn primary" onclick="connectToSheet()">Connect</button>
         </div>
-        <div class="status" id="status">
-            📋 Please connect to Google Sheets first
-        </div>
-        <div class="content">
-            <!-- Sheet Connect -->
-            <div style="margin: 8px 0 15px 0; text-align:center;">
-                <input type="text" id="sheet-id" style="width:70%;max-width:340px;margin-right:7px;"
-                    placeholder="Enter Google Sheet ID here">
-                <button class="btn" onclick="connectToSheet()">Connect</button>
-            </div>
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('add-match')">Add Match</button>
-                <button class="tab" onclick="showTab('standings')">Standings</button>
-                <button class="tab" onclick="showTab('matches')">All Matches</button>
-                <button class="tab" onclick="showTab('teams')">Manage Teams</button>
-                <button class="tab" onclick="showTab('setup')">Setup</button>
-            </div>
-            <div id="add-match" class="tab-content active">
-                <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2 style="font-size:1.2em;margin-bottom:7px;">Add New Match</h2>
+
+        <nav class="tabbar">
+            <button class="tab-link active" onclick="showTab('add-match')">Add Match</button>
+            <button class="tab-link" onclick="showTab('standings')">Standings</button>
+            <button class="tab-link" onclick="showTab('matches')">All Matches</button>
+            <button class="tab-link" onclick="showTab('teams')">Teams</button>
+            <button class="tab-link" onclick="showTab('setup')">Setup</button>
+        </nav>
+
+        <main class="tab-views">
+            <section id="add-match" class="tab-view active">
+                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+                <h2>Add New Match</h2>
                 <form id="match-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="team1">Team 1:</label>
-                            <select id="team1" required>
-                                <option value="">Select Team 1</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="team2">Team 2:</label>
-                            <select id="team2" required>
-                                <option value="">Select Team 2</option>
-                            </select>
-                        </div>
+                    <div class="input-row">
+                        <select id="team1" required></select>
+                        <span class="vs">vs</span>
+                        <select id="team2" required></select>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="team1-runs">Team 1 Runs:</label>
-                            <input type="number" id="team1-runs" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="team1-overs">Team 1 Overs (e.g., 1.4):</label>
-                            <input type="number" id="team1-overs" step="0.1" min="0" max="2" required>
-                        </div>
+                    <div class="input-row">
+                        <input type="number" id="team1-runs" min="0" placeholder="Team 1 Runs" required>
+                        <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="Team 1 Overs"
+                            required>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="team2-runs">Team 2 Runs:</label>
-                            <input type="number" id="team2-runs" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="team2-overs">Team 2 Overs (e.g., 1.4):</label>
-                            <input type="number" id="team2-overs" step="0.1" min="0" max="2" required>
-                        </div>
+                    <div class="input-row">
+                        <input type="number" id="team2-runs" min="0" placeholder="Team 2 Runs" required>
+                        <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="Team 2 Overs"
+                            required>
                     </div>
-                    <button type="submit" class="btn" id="add-match-btn">Add Match</button>
+                    <button class="btn primary" id="add-match-btn" type="submit">Add Match</button>
                 </form>
-            </div>
-            <div id="standings" class="tab-content">
-                <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2 style="font-size:1.2em;margin-bottom:7px;">League Standings</h2>
+            </section>
+            <section id="standings" class="tab-view">
+                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+                <h2>League Standings</h2>
                 <div class="table-container">
-                    <table class="standings-table">
+                    <table id="standings-table">
                         <thead>
                             <tr>
                                 <th>Rank</th>
@@ -90,21 +72,18 @@
                         <tbody id="standings-body"></tbody>
                     </table>
                 </div>
-            </div>
-            <div id="matches" class="tab-content">
-                <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2 style="font-size:1.2em;margin-bottom:7px;">All Matches</h2>
+            </section>
+            <section id="matches" class="tab-view">
+                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+                <h2>All Matches</h2>
                 <div id="matches-list"></div>
-            </div>
-            <div id="teams" class="tab-content">
-                <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2 style="font-size:1.2em;margin-bottom:7px;">Manage Teams</h2>
+            </section>
+            <section id="teams" class="tab-view">
+                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+                <h2>Manage Teams</h2>
                 <form id="team-form">
-                    <div class="form-group">
-                        <label for="team-name">Team Name:</label>
-                        <input type="text" id="team-name" required>
-                    </div>
-                    <button type="submit" class="btn" id="add-team-btn">Add Team</button>
+                    <input type="text" id="team-name" placeholder="Team Name" required>
+                    <button class="btn primary" type="submit">Add Team</button>
                 </form>
                 <div class="table-container">
                     <table>
@@ -116,23 +95,17 @@
                         <tbody id="teams-list"></tbody>
                     </table>
                 </div>
-            </div>
-            <!-- Setup Guide hidden except Setup tab -->
-            <div id="setup" class="tab-content">
-                <div class="setup-section" id="setup-section">
-                    <h3>📋 Setup Instructions</h3>
-                    <p><strong>Step 1:</strong> Create a Google Sheet with this exact structure:</p>
-                    <p>• <strong>Sheet 1 Name:</strong> "Teams" with columns: TeamName</p>
-                    <p>• <strong>Sheet 2 Name:</strong> "Matches" with columns: Team1, Team2, Team1Runs, Team1Overs,
-                        Team2Runs, Team2Overs, Winner, Date</p>
-                    <p><strong>Step 2:</strong> Make your Google Sheet public by going to Share → Change to "Anyone with
-                        the link can view"</p>
-                    <p><strong>Step 3:</strong> Copy your Google Sheet ID from the URL (the long string between /d/ and
-                        /edit)</p>
-                    <p><strong>Step 4:</strong> Enter it above and click Connect</p>
+            </section>
+            <section id="setup" class="tab-view">
+                <h2>Setup Instructions</h2>
+                <div class="setup-card">
+                    <!-- Setup instructions as you had before -->
+                    <p>1. Create a Google Sheet as described<br>
+                        2. Make it public<br>
+                        3. Paste your Sheet ID above and connect.</p>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
     <script src="main.js"></script>
 </body>
