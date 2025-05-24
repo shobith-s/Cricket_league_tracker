@@ -1,5 +1,5 @@
 // == Replace with your deployed Apps Script web app URL ==
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKLhyiTjo818hJm791he5p8XLmRiOMIoFjhIvYX-ivxzTSyF88_rVHWd9JG-DVv659Og/exec";
+const APPS_SCRIPT_URL = "https://gsheet-cors-proxy.shobi7196.workers.dev/";
 const DEFAULT_SHEET_ID = "1gBvi2v5LYHUMBsbSwAoUfLpDPG_zN_KBzMNq55K03fY";
 
 let teams = [], matches = [], sheetId = DEFAULT_SHEET_ID, isConnected = false;
