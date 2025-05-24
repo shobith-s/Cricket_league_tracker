@@ -6,108 +6,413 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏏 Cricket League Manager</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-    <div class="app-bg"></div>
-    <div class="container">
-        <header class="main-header">
-            <div class="emoji">🏏</div>
-            <h1>Cricket League Manager</h1>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="app-logo">
+                    <div class="logo-icon">🏏</div>
+                    <div class="logo-text">
+                        <h1>Cricket Manager</h1>
+                        <span>Pro League</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                </div>
+            </div>
         </header>
-        <div id="status" class="status connected">✅ Connected to Google Sheets - Data loaded successfully!</div>
-        <div class="card connect-card">
-            <input type="text" id="sheet-id" placeholder="Google Sheet ID">
-            <button class="btn primary" onclick="connectToSheet()">Connect</button>
+
+        <!-- Status Card -->
+        <div class="status-card connected">
+            <div class="status-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="status-content">
+                <h3>Connected Successfully!</h3>
+                <p>Google Sheets data synced</p>
+            </div>
+            <div class="status-indicator"></div>
         </div>
 
-        <nav class="tabbar">
-            <button class="tab-link active" onclick="showTab('add-match')">Add Match</button>
-            <button class="tab-link" onclick="showTab('standings')">Standings</button>
-            <button class="tab-link" onclick="showTab('matches')">All Matches</button>
-            <button class="tab-link" onclick="showTab('teams')">Teams</button>
-            <button class="tab-link" onclick="showTab('setup')">Setup</button>
-        </nav>
+        <!-- Connection Card -->
+        <div class="connection-card glass-card">
+            <div class="card-header">
+                <i class="fas fa-link"></i>
+                <h3>Connect to Google Sheets</h3>
+            </div>
+            <div class="input-group">
+                <input type="text" id="sheet-id" placeholder="Enter Google Sheet ID" class="modern-input">
+                <button class="primary-btn" onclick="connectToSheet()">
+                    <i class="fas fa-plug"></i>
+                    <span>Connect</span>
+                </button>
+            </div>
+        </div>
 
-        <main class="tab-views">
-            <section id="add-match" class="tab-view active">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>Add New Match</h2>
-                <form id="match-form">
-                    <div class="input-row">
-                        <select id="team1" required></select>
-                        <span class="vs">vs</span>
-                        <select id="team2" required></select>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="tab-views">
+                <!-- Add Match Tab -->
+                <section id="add-match" class="tab-view active">
+                    <div class="section-header">
+                        <h2><i class="fas fa-plus-circle"></i>New Match</h2>
+                        <button class="refresh-btn" onclick="loadData()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
-                    <div class="input-row">
-                        <input type="number" id="team1-runs" min="0" placeholder="Team 1 Runs" required>
-                        <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="Team 1 Overs"
-                            required>
+
+                    <form id="match-form" class="match-form">
+                        <div class="teams-selector">
+                            <div class="team-select-group">
+                                <label>Team 1</label>
+                                <select id="team1" class="modern-select" required>
+                                    <option value="">Select Team</option>
+                                </select>
+                            </div>
+                            <div class="vs-divider">
+                                <span>VS</span>
+                            </div>
+                            <div class="team-select-group">
+                                <label>Team 2</label>
+                                <select id="team2" class="modern-select" required>
+                                    <option value="">Select Team</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="score-inputs">
+                            <div class="team-score-card">
+                                <h4>Team 1 Score</h4>
+                                <div class="score-row">
+                                    <div class="input-group">
+                                        <label>Runs</label>
+                                        <input type="number" id="team1-runs" min="0" placeholder="0" class="score-input"
+                                            required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Overs</label>
+                                        <input type="number" id="team1-overs" min="0" step="0.1" max="20"
+                                            placeholder="0.0" class="score-input" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="team-score-card">
+                                <h4>Team 2 Score</h4>
+                                <div class="score-row">
+                                    <div class="input-group">
+                                        <label>Runs</label>
+                                        <input type="number" id="team2-runs" min="0" placeholder="0" class="score-input"
+                                            required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Overs</label>
+                                        <input type="number" id="team2-overs" min="0" step="0.1" max="20"
+                                            placeholder="0.0" class="score-input" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-save"></i>
+                            <span>Add Match</span>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Standings Tab -->
+                <section id="standings" class="tab-view">
+                    <div class="section-header">
+                        <h2><i class="fas fa-trophy"></i>Standings</h2>
+                        <button class="refresh-btn" onclick="loadData()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
-                    <div class="input-row">
-                        <input type="number" id="team2-runs" min="0" placeholder="Team 2 Runs" required>
-                        <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="Team 2 Overs"
-                            required>
+
+                    <div class="standings-container">
+                        <div class="table-card">
+                            <table class="modern-table" id="standings-table">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag"></i></th>
+                                        <th>Team</th>
+                                        <th>M</th>
+                                        <th>W</th>
+                                        <th>L</th>
+                                        <th>Pts</th>
+                                        <th>NRR</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standings-body">
+                                    <!-- Sample data for demo -->
+                                    <tr class="rank-1">
+                                        <td><span class="rank-badge gold">1</span></td>
+                                        <td><strong>Mumbai Indians</strong></td>
+                                        <td>8</td>
+                                        <td>6</td>
+                                        <td>2</td>
+                                        <td><span class="points">12</span></td>
+                                        <td><span class="nrr positive">+1.25</span></td>
+                                    </tr>
+                                    <tr class="rank-2">
+                                        <td><span class="rank-badge silver">2</span></td>
+                                        <td><strong>Chennai Super Kings</strong></td>
+                                        <td>8</td>
+                                        <td>5</td>
+                                        <td>3</td>
+                                        <td><span class="points">10</span></td>
+                                        <td><span class="nrr positive">+0.85</span></td>
+                                    </tr>
+                                    <tr class="rank-3">
+                                        <td><span class="rank-badge bronze">3</span></td>
+                                        <td><strong>Royal Challengers</strong></td>
+                                        <td>8</td>
+                                        <td>4</td>
+                                        <td>4</td>
+                                        <td><span class="points">8</span></td>
+                                        <td><span class="nrr negative">-0.15</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <button class="btn primary" id="add-match-btn" type="submit">Add Match</button>
-                </form>
-            </section>
-            <section id="standings" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>League Standings</h2>
-                <div class="table-container">
-                    <table id="standings-table">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Team</th>
-                                <th>Matches</th>
-                                <th>Won</th>
-                                <th>Lost</th>
-                                <th>Points</th>
-                                <th>NRR</th>
-                            </tr>
-                        </thead>
-                        <tbody id="standings-body"></tbody>
-                    </table>
-                </div>
-            </section>
-            <section id="matches" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>All Matches</h2>
-                <div id="matches-list"></div>
-            </section>
-            <section id="teams" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>Manage Teams</h2>
-                <form id="team-form">
-                    <input type="text" id="team-name" placeholder="Team Name" required>
-                    <button class="btn primary" type="submit">Add Team</button>
-                </form>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Team Name</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teams-list"></tbody>
-                    </table>
-                </div>
-            </section>
-            <section id="setup" class="tab-view">
-                <h2>Setup Instructions</h2>
-                <div class="setup-card">
-                    <!-- Setup instructions as you had before -->
-                    <p>1. Create a Google Sheet as described<br>
-                        2. Make it public<br>
-                        3. Paste your Sheet ID above and connect.</p>
-                </div>
-            </section>
+                </section>
+
+                <!-- All Matches Tab -->
+                <section id="matches" class="tab-view">
+                    <div class="section-header">
+                        <h2><i class="fas fa-list"></i>All Matches</h2>
+                        <button class="refresh-btn" onclick="loadData()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+
+                    <div class="matches-container" id="matches-list">
+                        <!-- Sample match cards -->
+                        <div class="match-card">
+                            <div class="match-header">
+                                <span class="match-date">Today, 7:30 PM</span>
+                                <span class="match-status completed">Completed</span>
+                            </div>
+                            <div class="match-teams">
+                                <div class="team">
+                                    <span class="team-name">Mumbai Indians</span>
+                                    <span class="team-score">185/6 (20.0)</span>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="team">
+                                    <span class="team-name">Chennai Super Kings</span>
+                                    <span class="team-score">178/8 (20.0)</span>
+                                </div>
+                            </div>
+                            <div class="match-result">
+                                <i class="fas fa-crown"></i>
+                                Mumbai Indians won by 7 runs
+                            </div>
+                        </div>
+
+                        <div class="match-card">
+                            <div class="match-header">
+                                <span class="match-date">Tomorrow, 3:30 PM</span>
+                                <span class="match-status upcoming">Upcoming</span>
+                            </div>
+                            <div class="match-teams">
+                                <div class="team">
+                                    <span class="team-name">Royal Challengers</span>
+                                    <span class="team-score">vs</span>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="team">
+                                    <span class="team-name">Delhi Capitals</span>
+                                    <span class="team-score">TBD</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Teams Tab -->
+                <section id="teams" class="tab-view">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i>Teams</h2>
+                        <button class="refresh-btn" onclick="loadData()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+
+                    <form id="team-form" class="team-form">
+                        <div class="input-group">
+                            <input type="text" id="team-name" placeholder="Enter team name" class="modern-input"
+                                required>
+                            <button type="submit" class="add-team-btn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="teams-grid" id="teams-list">
+                        <!-- Sample team cards -->
+                        <div class="team-card">
+                            <div class="team-avatar">MI</div>
+                            <h4>Mumbai Indians</h4>
+                            <p>8 matches played</p>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-avatar">CSK</div>
+                            <h4>Chennai Super Kings</h4>
+                            <p>8 matches played</p>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-avatar">RCB</div>
+                            <h4>Royal Challengers</h4>
+                            <p>8 matches played</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Setup Tab -->
+                <section id="setup" class="tab-view">
+                    <div class="section-header">
+                        <h2><i class="fas fa-cog"></i>Setup</h2>
+                    </div>
+
+                    <div class="setup-content">
+                        <div class="setup-card">
+                            <div class="setup-icon">
+                                <i class="fas fa-table"></i>
+                            </div>
+                            <div class="setup-info">
+                                <h3>Google Sheets Setup</h3>
+                                <ol>
+                                    <li>Create a new Google Sheet</li>
+                                    <li>Set up columns for teams and matches</li>
+                                    <li>Make the sheet publicly viewable</li>
+                                    <li>Copy the Sheet ID from the URL</li>
+                                    <li>Paste it in the connection field above</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="setup-card">
+                            <div class="setup-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="setup-info">
+                                <h3>Data Privacy</h3>
+                                <p>Your data is stored securely in Google Sheets. We only read the data you provide and
+                                    don't store any personal information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="showTab('add-match')" data-tab="add-match">
+                <i class="fas fa-plus"></i>
+                <span>Add Match</span>
+            </button>
+            <button class="nav-item" onclick="showTab('standings')" data-tab="standings">
+                <i class="fas fa-trophy"></i>
+                <span>Standings</span>
+            </button>
+            <button class="nav-item" onclick="showTab('matches')" data-tab="matches">
+                <i class="fas fa-list"></i>
+                <span>Matches</span>
+            </button>
+            <button class="nav-item" onclick="showTab('teams')" data-tab="teams">
+                <i class="fas fa-users"></i>
+                <span>Teams</span>
+            </button>
+            <button class="nav-item" onclick="showTab('setup')" data-tab="setup">
+                <i class="fas fa-cog"></i>
+                <span>Setup</span>
+            </button>
+        </nav>
     </div>
-    <script src="main.js"></script>
+
+    <script>
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tab views
+            document.querySelectorAll('.tab-view').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to corresponding nav item
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // Placeholder functions for functionality
+        function connectToSheet() {
+            const sheetId = document.getElementById('sheet-id').value;
+            if (sheetId) {
+                console.log('Connecting to sheet:', sheetId);
+                // Add your connection logic here
+            }
+        }
+
+        function loadData() {
+            console.log('Loading data...');
+            // Add your data loading logic here
+        }
+
+        // Form submission handlers
+        document.getElementById('match-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            console.log('Adding match...');
+            // Add your match submission logic here
+        });
+
+        document.getElementById('team-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const teamName = document.getElementById('team-name').value;
+            if (teamName) {
+                console.log('Adding team:', teamName);
+                // Add your team creation logic here
+                document.getElementById('team-name').value = '';
+            }
+        });
+
+        // Add some interactive animations
+        document.querySelectorAll('.refresh-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.style.transform = 'rotate(360deg)';
+                setTimeout(() => {
+                    this.style.transform = 'rotate(0deg)';
+                }, 500);
+            });
+        });
+    </script>
 </body>
 
 </html>
