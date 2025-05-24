@@ -6,7 +6,6 @@ let teams = [], matches = [], sheetId = DEFAULT_SHEET_ID, isConnected = false;
 
 window.onload = () => {
     document.getElementById('sheet-id').value = DEFAULT_SHEET_ID;
-    // Hide setup on load, show only if "setup" tab is clicked
     document.getElementById('setup-section').classList.remove('active');
 };
 
@@ -21,7 +20,6 @@ function showTab(tabName) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById(tabName).classList.add('active');
     event.target.classList.add('active');
-    // Show setup-section only in setup tab
     document.getElementById('setup-section').classList.toggle('active', tabName === 'setup');
     if (isConnected) {
         if (tabName === 'standings') updateStandings();
@@ -122,13 +120,13 @@ async function addTeam() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ row: [teamName] })
         });
-        const text = await response.text();
-        if (text === 'Success') {
+        const json = await response.json();
+        if (json.result === "Success") {
             updateStatus('✅ Team added!', 'connected');
             document.getElementById('team-name').value = '';
             setTimeout(loadData, 600);
         } else {
-            updateStatus('❌ Failed to add team: ' + text, 'error');
+            updateStatus('❌ Failed to add team: ' + JSON.stringify(json), 'error');
         }
     } catch (err) {
         updateStatus('❌ Failed to add team (network error)', 'error');
@@ -158,13 +156,13 @@ async function addMatch() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ row: [team1, team2, team1Runs, team1Overs, team2Runs, team2Overs, winner, date] })
         });
-        const text = await response.text();
-        if (text === 'Success') {
+        const json = await response.json();
+        if (json.result === "Success") {
             updateStatus('✅ Match added!', 'connected');
             document.getElementById('match-form').reset();
             setTimeout(loadData, 600);
         } else {
-            updateStatus('❌ Failed to add match: ' + text, 'error');
+            updateStatus('❌ Failed to add match: ' + JSON.stringify(json), 'error');
         }
     } catch (err) {
         updateStatus('❌ Failed to add match (network error)', 'error');
