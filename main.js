@@ -1,5 +1,5 @@
 // == Replace with your deployed Apps Script web app URL ==
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwH0iXJa2xS9a6xmJSZNHzcsZTcnPnOJlEWYi7OxwMLDii9hIKphKeMTvSC69PEE2vZwA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9bKNJB4oJdeGbyRe9xWP5am3j8x7FBRyZ2N6zFHmAaYnu723IscSjlStEFfPnp4jfRw/exec";
 const DEFAULT_SHEET_ID = "1gBvi2v5LYHUMBsbSwAoUfLpDPG_zN_KBzMNq55K03fY";
 
 let teams = [], matches = [], sheetId = DEFAULT_SHEET_ID, isConnected = false;
