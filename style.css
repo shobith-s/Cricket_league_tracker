@@ -450,3 +450,75 @@ select:focus {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
+
+.form-card {
+    background: #f8fafc;
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(80, 60, 150, 0.08);
+    padding: 1.1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.05rem;
+    margin-bottom: 1.2rem;
+}
+
+.form-team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6em;
+}
+
+.team-select {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 49%;
+}
+
+.vs-text {
+    font-weight: 700;
+    font-size: 1.13rem;
+    color: #7b68ee;
+    text-align: center;
+    min-width: 2.2em;
+    padding: 0 0.1em;
+}
+
+.form-score-row {
+    display: flex;
+    gap: 0.6em;
+    flex-wrap: wrap;
+}
+
+.form-score-row input {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+@media (max-width: 700px) {
+    .form-card {
+        padding: 1rem 0.6rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .container {
+        padding: 1.2rem 0.5rem 7rem 0.5rem !important;
+    }
+
+    .form-team-row,
+    .form-score-row {
+        flex-direction: column;
+        gap: 0.5em;
+        align-items: stretch;
+    }
+
+    .team-select,
+    .form-score-row input {
+        max-width: 100%;
+    }
+
+    .vs-text {
+        margin: 0.1em 0 0.4em 0;
+        font-size: 1rem;
+    }
+}
