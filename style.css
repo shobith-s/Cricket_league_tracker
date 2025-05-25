@@ -23,6 +23,17 @@
     --font-xl: clamp(1.5rem, 5vw, 2rem);
     --font-2xl: clamp(1.875rem, 6vw, 2.5rem);
 }
+@media (max-width: 480px) {
+    .form-score-row {
+        flex-direction: row;
+        gap: var(--spacing-sm);
+    }
+
+    .form-score-row input {
+        flex: 1 1 45%;
+        min-width: 0;
+    }
+}
 
 * {
     box-sizing: border-box;
