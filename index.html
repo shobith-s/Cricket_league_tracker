@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-bg"></div>
     <div class="container">
@@ -15,7 +16,9 @@
             <div class="emoji">🏏</div>
             <h1>Cricket League Manager</h1>
         </header>
-        <div id="status" class="status connected">✅ Connected to Google Sheets - Data loaded successfully!</div>
+        <div id="status" class="status connected">
+            ✅ Connected to Google Sheets - Data loaded successfully!
+        </div>
         <div class="card connect-card">
             <input type="text" id="sheet-id" placeholder="Google Sheet ID">
             <button class="btn primary" onclick="connectToSheet()">Connect</button>
@@ -30,28 +33,34 @@
         </nav>
 
         <main class="tab-views">
+
+            <!-- Add Match Tab -->
             <section id="add-match" class="tab-view active">
                 <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
                 <h2>Add New Match</h2>
                 <form id="match-form">
-                    <div class="input-row">
-                        <select id="team1" required></select>
-                        <span class="vs">vs</span>
-                        <select id="team2" required></select>
+                    <div class="form-card">
+                        <div class="form-team-row">
+                            <select id="team1" required class="team-select"></select>
+                            <span class="vs-text">vs</span>
+                            <select id="team2" required class="team-select"></select>
+                        </div>
+                        <div class="form-score-row">
+                            <input type="number" id="team1-runs" min="0" placeholder="Team 1 Runs" required>
+                            <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="Team 1 Overs"
+                                required>
+                        </div>
+                        <div class="form-score-row">
+                            <input type="number" id="team2-runs" min="0" placeholder="Team 2 Runs" required>
+                            <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="Team 2 Overs"
+                                required>
+                        </div>
+                        <button class="btn primary" id="add-match-btn" type="submit">Add Match</button>
                     </div>
-                    <div class="input-row">
-                        <input type="number" id="team1-runs" min="0" placeholder="Team 1 Runs" required>
-                        <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="Team 1 Overs"
-                            required>
-                    </div>
-                    <div class="input-row">
-                        <input type="number" id="team2-runs" min="0" placeholder="Team 2 Runs" required>
-                        <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="Team 2 Overs"
-                            required>
-                    </div>
-                    <button class="btn primary" id="add-match-btn" type="submit">Add Match</button>
                 </form>
             </section>
+
+            <!-- Standings Tab -->
             <section id="standings" class="tab-view">
                 <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
                 <h2>League Standings</h2>
@@ -72,17 +81,23 @@
                     </table>
                 </div>
             </section>
+
+            <!-- All Matches Tab -->
             <section id="matches" class="tab-view">
                 <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
                 <h2>All Matches</h2>
                 <div id="matches-list"></div>
             </section>
+
+            <!-- Manage Teams Tab -->
             <section id="teams" class="tab-view">
                 <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
                 <h2>Manage Teams</h2>
                 <form id="team-form">
-                    <input type="text" id="team-name" placeholder="Team Name" required>
-                    <button class="btn primary" type="submit">Add Team</button>
+                    <div class="form-card">
+                        <input type="text" id="team-name" placeholder="Team Name" required>
+                        <button class="btn primary" type="submit">Add Team</button>
+                    </div>
                 </form>
                 <div class="table-container">
                     <table>
@@ -95,12 +110,16 @@
                     </table>
                 </div>
             </section>
+
+            <!-- Setup Instructions Tab -->
             <section id="setup" class="tab-view">
                 <h2>Setup Instructions</h2>
                 <div class="setup-card">
-                    <p>1. Create a Google Sheet as described<br>
+                    <p>
+                        1. Create a Google Sheet as described<br>
                         2. Make it public<br>
-                        3. Paste your Sheet ID above and connect.</p>
+                        3. Paste your Sheet ID above and connect.
+                    </p>
                 </div>
             </section>
         </main>
