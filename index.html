@@ -230,39 +230,11 @@
             <!-- All Matches Tab -->
             <section id="matches" class="tab-view">
                 <div class="tab-header">
-                    <h2>All Matches</h2>
+                    <h2>Match History</h2>
                     <button class="btn refresh-btn" onclick="loadData()">
                         <span class="refresh-icon">🔄</span>
                         <span>Refresh</span>
                     </button>
-                </div>
-
-                <!-- Match Filters -->
-                <div class="match-filters">
-                    <select id="team-filter" onchange="filterMatches()">
-                        <option value="">All Teams</option>
-                    </select>
-                    <select id="result-filter" onchange="filterMatches()">
-                        <option value="">All Results</option>
-                        <option value="won">Wins Only</option>
-                        <option value="lost">Losses Only</option>
-                    </select>
-                </div>
-
-                <!-- Match Statistics -->
-                <div class="match-stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-matches-stat">0</div>
-                        <div class="stat-label">Total Matches</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="avg-score-stat">0</div>
-                        <div class="stat-label">Avg Score</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="highest-score-stat">0</div>
-                        <div class="stat-label">Highest Score</div>
-                    </div>
                 </div>
 
                 <div id="matches-list" class="matches-list"></div>
@@ -321,13 +293,13 @@
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon">⚡</div>
-                            <div class="metric-value" id="avg-run-rate">0.00</div>
-                            <div class="metric-label">Avg Run Rate</div>
+                            <div class="metric-value" id="teams-30plus">0</div>
+                            <div class="metric-label">Teams with Most 30+ Scores</div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon">🎯</div>
-                            <div class="metric-value" id="close-matches">0</div>
-                            <div class="metric-label">Close Matches</div>
+                            <div class="metric-value" id="highest-run-scorer">-</div>
+                            <div class="metric-label">Highest Run Scored</div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon">📊</div>
@@ -337,43 +309,7 @@
                     </div>
                 </div>
 
-                <!-- Performance Charts -->
-                <div class="analytics-section">
-                    <h3>Performance Trends</h3>
-                    <div class="chart-container">
-                        <canvas id="performance-chart" width="400" height="200"></canvas>
-                    </div>
-                </div>
 
-                <!-- Team Comparison -->
-                <div class="analytics-section">
-                    <h3>Team Comparison</h3>
-                    <div class="comparison-controls">
-                        <select id="compare-team1">
-                            <option value="">Select Team 1</option>
-                        </select>
-                        <span class="vs-text">VS</span>
-                        <select id="compare-team2">
-                            <option value="">Select Team 2</option>
-                        </select>
-                    </div>
-                    <div class="comparison-result" id="comparison-result"></div>
-                </div>
-
-                <!-- Export Options -->
-                <div class="analytics-section">
-                    <h3>Export Data</h3>
-                    <div class="export-buttons">
-                        <button class="btn secondary" onclick="exportToPDF()">
-                            <span class="btn-icon">📄</span>
-                            <span>Export PDF</span>
-                        </button>
-                        <button class="btn secondary" onclick="shareResults()">
-                            <span class="btn-icon">📤</span>
-                            <span>Share Results</span>
-                        </button>
-                    </div>
-                </div>
             </section>
         </main>
     </div>

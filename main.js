@@ -156,8 +156,7 @@ function showTab(tabName) {
                 updateStandingsCards();
                 break;
             case 'matches':
-                updateMatchesList();
-                updateMatchStats();
+                displayMatches();
                 break;
             case 'teams':
                 updateTeamsList();
@@ -394,7 +393,7 @@ async function loadData() {
         updateTeamSelects();
         updateTeamsList();
         updateStandings();
-        updateMatchesList();
+        displayMatches();
         
         // Update header stats
         updateHeaderStats();
@@ -412,7 +411,7 @@ async function loadData() {
             updateTeamSelects();
             updateTeamsList();
             updateStandings();
-            updateMatchesList();
+            displayMatches();
             updateHeaderStats();
             return;
         }
@@ -637,26 +636,7 @@ function updateStandings() {
     });
 }
 
-function updateMatchesList() {
-    const matchesList = document.getElementById('matches-list');
-    matchesList.innerHTML = '';
-    if (matches.length === 0) { matchesList.innerHTML = '<p>No matches played yet.</p>'; return; }
-    const reversedMatches = [...matches].reverse();
-    reversedMatches.forEach(match => {
-        const resultText = match.winner === 'Tie'
-            ? 'Match Tied'
-            : `${match.winner} won by ${Math.abs(match.team1Runs - match.team2Runs)} runs`;
-        matchesList.innerHTML += `
-            <div class="match-item">
-                <div class="match-teams">${match.team1} vs ${match.team2}</div>
-                <div class="match-score">${match.team1}: ${match.team1Runs}/${match.team1Overs} overs</div>
-                <div class="match-score">${match.team2}: ${match.team2Runs}/${match.team2Overs} overs</div>
-                <div class="match-result">${resultText}</div>
-                <small>Date: ${match.date}</small>
-            </div>
-        `;
-    });
-}
+
 
 // Enhanced functions for new features
 
@@ -722,25 +702,7 @@ function updateLeagueSummary(standings) {
     if (mostWinsEl) mostWinsEl.textContent = `${mostWins.team} (${mostWins.won})`;
 }
 
-function updateMatchStats() {
-    const totalMatchesStat = document.getElementById('total-matches-stat');
-    const avgScoreStat = document.getElementById('avg-score-stat');
-    const highestScoreStat = document.getElementById('highest-score-stat');
-    
-    if (totalMatchesStat) totalMatchesStat.textContent = matches.length;
-    
-    if (matches.length > 0) {
-        const totalRuns = matches.reduce((sum, match) => sum + match.team1Runs + match.team2Runs, 0);
-        const avgScore = Math.round(totalRuns / (matches.length * 2));
-        if (avgScoreStat) avgScoreStat.textContent = avgScore;
-        
-        const highestScore = Math.max(...matches.map(m => Math.max(m.team1Runs, m.team2Runs)));
-        if (highestScoreStat) highestScoreStat.textContent = highestScore;
-    } else {
-        if (avgScoreStat) avgScoreStat.textContent = '0';
-        if (highestScoreStat) highestScoreStat.textContent = '0';
-    }
-}
+
 
 function updateTeamsGrid() {
     const teamsGrid = document.getElementById('teams-grid');
@@ -807,19 +769,18 @@ function updatePerformanceCards() {
 
 function updateAnalytics() {
     updateKeyMetrics();
-    updateTeamComparison();
 }
 
 function updateKeyMetrics() {
     const winPercentageEl = document.getElementById('win-percentage');
-    const avgRunRateEl = document.getElementById('avg-run-rate');
-    const closeMatchesEl = document.getElementById('close-matches');
+    const teams30plusEl = document.getElementById('teams-30plus');
+    const highestRunScorerEl = document.getElementById('highest-run-scorer');
     const totalRunsEl = document.getElementById('total-runs');
     
     if (matches.length === 0) {
         if (winPercentageEl) winPercentageEl.textContent = '0%';
-        if (avgRunRateEl) avgRunRateEl.textContent = '0.00';
-        if (closeMatchesEl) closeMatchesEl.textContent = '0';
+        if (teams30plusEl) teams30plusEl.textContent = '0';
+        if (highestRunScorerEl) highestRunScorerEl.textContent = '-';
         if (totalRunsEl) totalRunsEl.textContent = '0';
         return;
     }
@@ -835,80 +796,69 @@ function updateKeyMetrics() {
     const avgWinRate = teams.length > 0 ? (totalWinRate / teams.length).toFixed(1) : '0.0';
     if (winPercentageEl) winPercentageEl.textContent = `${avgWinRate}%`;
     
-    // Calculate average run rate
-    let totalRunRate = 0;
-    let totalInnings = 0;
+    // Calculate teams with most 30+ scores (>=30 && <50)
+    const team30plusCounts = {};
     matches.forEach(match => {
-        if (match.team1Overs > 0) {
-            totalRunRate += match.team1Runs / match.team1Overs;
-            totalInnings++;
+        if (match.team1Runs >= 30 && match.team1Runs < 50) {
+            team30plusCounts[match.team1] = (team30plusCounts[match.team1] || 0) + 1;
         }
-        if (match.team2Overs > 0) {
-            totalRunRate += match.team2Runs / match.team2Overs;
-            totalInnings++;
+        if (match.team2Runs >= 30 && match.team2Runs < 50) {
+            team30plusCounts[match.team2] = (team30plusCounts[match.team2] || 0) + 1;
         }
     });
-    const avgRunRate = totalInnings > 0 ? (totalRunRate / totalInnings).toFixed(2) : '0.00';
-    if (avgRunRateEl) avgRunRateEl.textContent = avgRunRate;
     
-    // Count close matches (margin <= 20 runs)
-    const closeMatches = matches.filter(match => {
-        const margin = Math.abs(match.team1Runs - match.team2Runs);
-        return margin <= 20;
-    }).length;
-    if (closeMatchesEl) closeMatchesEl.textContent = closeMatches;
+    const maxCount = Math.max(...Object.values(team30plusCounts), 0);
+    const topTeams = Object.keys(team30plusCounts).filter(team => team30plusCounts[team] === maxCount);
+    
+    if (teams30plusEl) {
+        if (maxCount === 0) {
+            teams30plusEl.textContent = '0';
+        } else if (topTeams.length === 1) {
+            teams30plusEl.textContent = `${topTeams[0]} (${maxCount})`;
+        } else {
+            teams30plusEl.textContent = `${topTeams.join(', ')} (${maxCount})`;
+        }
+    }
+    
+    // Find highest run scored with team name
+    let highestRun = 0;
+    let highestRunTeam = '';
+    matches.forEach(match => {
+        if (match.team1Runs > highestRun) {
+            highestRun = match.team1Runs;
+            highestRunTeam = match.team1;
+        }
+        if (match.team2Runs > highestRun) {
+            highestRun = match.team2Runs;
+            highestRunTeam = match.team2;
+        }
+    });
+    
+    if (highestRunScorerEl) {
+        if (highestRun === 0) {
+            highestRunScorerEl.textContent = '-';
+        } else {
+            highestRunScorerEl.textContent = `${highestRunTeam} (${highestRun})`;
+        }
+    }
     
     // Calculate total runs
     const totalRuns = matches.reduce((sum, match) => sum + match.team1Runs + match.team2Runs, 0);
     if (totalRunsEl) totalRunsEl.textContent = totalRuns.toLocaleString();
 }
 
-function updateTeamComparison() {
-    const compareTeam1 = document.getElementById('compare-team1');
-    const compareTeam2 = document.getElementById('compare-team2');
-    
-    if (compareTeam1 && compareTeam2) {
-        // Clear and populate team options
-        compareTeam1.innerHTML = '<option value="">Select Team 1</option>';
-        compareTeam2.innerHTML = '<option value="">Select Team 2</option>';
-        
-        teams.forEach(team => {
-            compareTeam1.innerHTML += `<option value="${team}">${team}</option>`;
-            compareTeam2.innerHTML += `<option value="${team}">${team}</option>`;
-        });
-    }
-}
 
-function filterMatches() {
-    const teamFilter = document.getElementById('team-filter')?.value;
-    const resultFilter = document.getElementById('result-filter')?.value;
-    
-    let filteredMatches = [...matches];
-    
-    if (teamFilter) {
-        filteredMatches = filteredMatches.filter(match => 
-            match.team1 === teamFilter || match.team2 === teamFilter
-        );
-    }
-    
-    if (resultFilter === 'won' && teamFilter) {
-        filteredMatches = filteredMatches.filter(match => match.winner === teamFilter);
-    } else if (resultFilter === 'lost' && teamFilter) {
-        filteredMatches = filteredMatches.filter(match => 
-            match.winner !== teamFilter && match.winner !== 'Tie'
-        );
-    }
-    
-    // Update matches list with filtered results
+
+function displayMatches() {
     const matchesList = document.getElementById('matches-list');
     if (matchesList) {
         matchesList.innerHTML = '';
-        if (filteredMatches.length === 0) {
-            matchesList.innerHTML = '<p>No matches found with current filters.</p>';
+        if (matches.length === 0) {
+            matchesList.innerHTML = '<p>No matches found.</p>';
             return;
         }
         
-        const reversedMatches = [...filteredMatches].reverse();
+        const reversedMatches = [...matches].reverse();
         reversedMatches.forEach(match => {
             const resultText = match.winner === 'Tie'
                 ? 'Match Tied'
@@ -928,27 +878,7 @@ function filterMatches() {
     }
 }
 
-function exportToPDF() {
-    alert('PDF export feature coming soon! This would generate a comprehensive league report.');
-}
 
-function shareResults() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'Cricket League Results',
-            text: `Check out our cricket league standings! ${teams.length} teams, ${matches.length} matches played.`,
-            url: window.location.href
-        });
-    } else {
-        // Fallback for browsers that don't support Web Share API
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            alert('League URL copied to clipboard!');
-        }).catch(() => {
-            alert('Unable to share. Please copy the URL manually: ' + url);
-        });
-    }
-}
 
 function updateHeaderStats() {
     const totalTeamsEl = document.getElementById('total-teams');
