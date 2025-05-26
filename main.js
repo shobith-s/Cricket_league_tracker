@@ -806,7 +806,15 @@ function updateKeyMetrics() {
         } else if (top50Teams.length === 1) {
             teams50plusEl.textContent = `${top50Teams[0]} (${max50Count})`;
         } else {
-            teams50plusEl.textContent = `${top50Teams.join(', ')} (${max50Count})`;
+            // Limit to first 3 teams and show "and X more" if there are more
+            const maxDisplayTeams = 3;
+            if (top50Teams.length <= maxDisplayTeams) {
+                teams50plusEl.textContent = `${top50Teams.join(', ')} (${max50Count})`;
+            } else {
+                const displayTeams = top50Teams.slice(0, maxDisplayTeams);
+                const remainingCount = top50Teams.length - maxDisplayTeams;
+                teams50plusEl.textContent = `${displayTeams.join(', ')} and ${remainingCount} more (${max50Count})`;
+            }
         }
     }
     

@@ -882,6 +882,10 @@ input::placeholder {
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
     transition: var(--transition);
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .metric-card:hover {
@@ -899,6 +903,13 @@ input::placeholder {
     font-weight: 800;
     color: var(--primary);
     margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
+    max-height: 3.6em;
 }
 
 .metric-label {
