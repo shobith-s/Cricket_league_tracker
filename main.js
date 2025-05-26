@@ -127,22 +127,67 @@ function updateThemeIcon() {
     }
 }
 
+function setResponsiveText() {
+    const isMobile = window.innerWidth <= 767;
+    const expandableCards = document.querySelectorAll('.expandable-card .metric-value');
+    
+    expandableCards.forEach(metricEl => {
+        if (isMobile) {
+            // On mobile, always show full text
+            if (metricEl.getAttribute('data-full-text')) {
+                metricEl.textContent = metricEl.getAttribute('data-full-text');
+            }
+        } else {
+            // On desktop, show short text unless expanded
+            const card = metricEl.closest('.metric-card');
+            const isExpanded = card.classList.contains('expanded');
+            if (isExpanded && metricEl.getAttribute('data-full-text')) {
+                metricEl.textContent = metricEl.getAttribute('data-full-text');
+            } else if (metricEl.getAttribute('data-short-text')) {
+                metricEl.textContent = metricEl.getAttribute('data-short-text');
+            }
+        }
+    });
+}
+
 function toggleMetricCard(metricId) {
+    // Check if we're on mobile (screen width <= 767px)
+    const isMobile = window.innerWidth <= 767;
+    
+    // On mobile, don't allow manual toggling - cards auto-expand
+    if (isMobile) {
+        return;
+    }
+    
     const card = document.getElementById(metricId).closest('.metric-card');
+    const metricValueEl = document.getElementById(metricId);
     const isExpanded = card.classList.contains('expanded');
     
     // Close all other expanded cards first
     document.querySelectorAll('.expandable-card.expanded').forEach(expandedCard => {
         if (expandedCard !== card) {
             expandedCard.classList.remove('expanded');
+            // Reset text to short version for other cards
+            const otherMetricEl = expandedCard.querySelector('.metric-value');
+            if (otherMetricEl && otherMetricEl.getAttribute('data-short-text')) {
+                otherMetricEl.textContent = otherMetricEl.getAttribute('data-short-text');
+            }
         }
     });
     
     // Toggle current card
     if (isExpanded) {
         card.classList.remove('expanded');
+        // Show short text when collapsed
+        if (metricValueEl.getAttribute('data-short-text')) {
+            metricValueEl.textContent = metricValueEl.getAttribute('data-short-text');
+        }
     } else {
         card.classList.add('expanded');
+        // Show full text when expanded
+        if (metricValueEl.getAttribute('data-full-text')) {
+            metricValueEl.textContent = metricValueEl.getAttribute('data-full-text');
+        }
     }
 }
 
@@ -822,18 +867,29 @@ function updateKeyMetrics() {
     if (teams50plusEl) {
         if (max50Count === 0) {
             teams50plusEl.textContent = '-';
+            teams50plusEl.setAttribute('data-full-text', '-');
+            teams50plusEl.setAttribute('data-short-text', '-');
         } else if (top50Teams.length === 1) {
-            teams50plusEl.textContent = `${top50Teams[0]} (${max50Count})`;
+            const text = `${top50Teams[0]} (${max50Count})`;
+            teams50plusEl.textContent = text;
+            teams50plusEl.setAttribute('data-full-text', text);
+            teams50plusEl.setAttribute('data-short-text', text);
         } else {
-            // Limit to first 3 teams and show "and X more" if there are more
+            // Store both full and truncated versions
+            const fullText = `${top50Teams.join(', ')} (${max50Count})`;
             const maxDisplayTeams = 3;
+            let shortText;
             if (top50Teams.length <= maxDisplayTeams) {
-                teams50plusEl.textContent = `${top50Teams.join(', ')} (${max50Count})`;
+                shortText = fullText;
             } else {
                 const displayTeams = top50Teams.slice(0, maxDisplayTeams);
                 const remainingCount = top50Teams.length - maxDisplayTeams;
-                teams50plusEl.textContent = `${displayTeams.join(', ')} and ${remainingCount} more (${max50Count})`;
+                shortText = `${displayTeams.join(', ')} and ${remainingCount} more (${max50Count})`;
             }
+            
+            teams50plusEl.textContent = fullText;
+            teams50plusEl.setAttribute('data-full-text', fullText);
+            teams50plusEl.setAttribute('data-short-text', shortText);
         }
     }
     
@@ -855,10 +911,29 @@ function updateKeyMetrics() {
     if (teams30plusEl) {
         if (maxCount === 0) {
             teams30plusEl.textContent = '0';
+            teams30plusEl.setAttribute('data-full-text', '0');
+            teams30plusEl.setAttribute('data-short-text', '0');
         } else if (topTeams.length === 1) {
-            teams30plusEl.textContent = `${topTeams[0]} (${maxCount})`;
+            const text = `${topTeams[0]} (${maxCount})`;
+            teams30plusEl.textContent = text;
+            teams30plusEl.setAttribute('data-full-text', text);
+            teams30plusEl.setAttribute('data-short-text', text);
         } else {
-            teams30plusEl.textContent = `${topTeams.join(', ')} (${maxCount})`;
+            // Store both full and truncated versions
+            const fullText = `${topTeams.join(', ')} (${maxCount})`;
+            const maxDisplayTeams = 3;
+            let shortText;
+            if (topTeams.length <= maxDisplayTeams) {
+                shortText = fullText;
+            } else {
+                const displayTeams = topTeams.slice(0, maxDisplayTeams);
+                const remainingCount = topTeams.length - maxDisplayTeams;
+                shortText = `${displayTeams.join(', ')} and ${remainingCount} more (${maxCount})`;
+            }
+            
+            teams30plusEl.textContent = fullText;
+            teams30plusEl.setAttribute('data-full-text', fullText);
+            teams30plusEl.setAttribute('data-short-text', shortText);
         }
     }
     
@@ -887,6 +962,9 @@ function updateKeyMetrics() {
     // Calculate total runs
     const totalRuns = matches.reduce((sum, match) => sum + match.team1Runs + match.team2Runs, 0);
     if (totalRunsEl) totalRunsEl.textContent = totalRuns.toLocaleString();
+    
+    // Set responsive text based on screen size
+    setResponsiveText();
 }
 
 
@@ -950,3 +1028,8 @@ loadData = async function() {
 
 // Auto-refresh every 30 seconds when connected
 setInterval(() => { if (isConnected) loadData(); }, 30000);
+
+// Handle screen resize to update text display
+window.addEventListener('resize', () => {
+    setResponsiveText();
+});

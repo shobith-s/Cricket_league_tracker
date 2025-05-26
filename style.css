@@ -869,27 +869,51 @@ input::placeholder {
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
 }
 
-/* Mobile-first: 2x2 grid for better space utilization */
+/* All cards span full width in single column */
+.metrics-grid .metric-card {
+    grid-column: span 1;
+    height: auto;
+    min-height: auto;
+}
+
+/* Mobile styles - maintain single column layout */
 @media (max-width: 767px) {
     .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
         gap: var(--spacing-sm);
     }
     
-    /* On mobile, expandable cards span full width when expanded */
-    .metrics-grid .expandable-card.expanded {
-        grid-column: span 2;
+    /* On mobile, all cards auto-expand */
+    .metrics-grid .metric-card {
+        grid-column: span 1;
         margin-bottom: var(--spacing-sm);
+        height: auto !important;
+        min-height: auto !important;
+        cursor: default !important;
+    }
+    
+    /* On mobile, always show expanded state styling */
+    .metrics-grid .metric-card .metric-value {
+        font-size: var(--font-lg) !important;
+        line-height: 1.4 !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+    }
+    
+    /* Hide click indicators on mobile */
+    .metrics-grid .metric-card .expand-indicator {
+        display: none !important;
     }
     
     /* Optimize card sizing for mobile */
     .metric-card {
-        height: 120px !important;
+        height: auto !important;
+        min-height: auto !important;
         padding: var(--spacing-md) !important;
     }
     
@@ -919,11 +943,12 @@ input::placeholder {
 
 @media (min-width: 768px) {
     .metrics-grid {
-        grid-template-columns: 150px 150px 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg);
     }
     
-    /* When cards are expanded, use equal widths */
-    .metrics-grid .expandable-card.expanded {
+    /* Expandable cards always span full width */
+    .metrics-grid .expandable-card {
         grid-column: span 2;
     }
 }
@@ -936,7 +961,8 @@ input::placeholder {
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
     transition: var(--transition);
-    height: 140px;
+    height: auto;
+    min-height: 140px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -999,10 +1025,18 @@ input::placeholder {
     z-index: 10;
 }
 
+.expandable-card.expanded {
+    height: auto;
+    min-height: 180px;
+    padding: var(--spacing-xl);
+}
+
 .expandable-card.expanded .metric-value {
     white-space: normal;
     text-overflow: unset;
     max-height: none;
+    font-size: var(--font-lg);
+    line-height: 1.4;
 }
 
 /* Add a small indicator for expandable cards */
