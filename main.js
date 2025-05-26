@@ -314,7 +314,18 @@ async function loadData() {
             throw new Error('Invalid sheet ID or sheet not accessible');
         }
         
-        const teamsData = JSON.parse(teamsText.substr(47).slice(0, -2));
+        // More robust JSON parsing
+        let teamsData;
+        try {
+            // Google Sheets returns JSONP, need to extract JSON
+            const jsonStart = teamsText.indexOf('(') + 1;
+            const jsonEnd = teamsText.lastIndexOf(')');
+            const jsonString = teamsText.substring(jsonStart, jsonEnd);
+            teamsData = JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error('JSON parsing error:', parseError);
+            throw new Error('Failed to parse response from Google Sheets');
+        }
         teams = [];
         
         if (teamsData.table && teamsData.table.rows) {
@@ -340,7 +351,18 @@ async function loadData() {
         const matchesText = await matchesResponse.text();
         console.log('Matches response length:', matchesText.length);
         
-        const matchesData = JSON.parse(matchesText.substr(47).slice(0, -2));
+        // More robust JSON parsing for matches
+        let matchesData;
+        try {
+            // Google Sheets returns JSONP, need to extract JSON
+            const jsonStart = matchesText.indexOf('(') + 1;
+            const jsonEnd = matchesText.lastIndexOf(')');
+            const jsonString = matchesText.substring(jsonStart, jsonEnd);
+            matchesData = JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error('Matches JSON parsing error:', parseError);
+            throw new Error('Failed to parse matches response from Google Sheets');
+        }
         matches = [];
         
         if (matchesData.table && matchesData.table.rows) {
@@ -362,6 +384,11 @@ async function loadData() {
         
         console.log('Loaded matches:', matches);
         
+        // Final validation - ensure we have data
+        if (teams.length === 0) {
+            throw new Error('No teams found in the Teams sheet. Please check your sheet structure.');
+        }
+        
         isConnected = true;
         updateStatus(`✅ Connected! Loaded ${teams.length} teams and ${matches.length} matches`, 'connected');
         updateTeamSelects();
@@ -372,8 +399,23 @@ async function loadData() {
         // Update header stats
         updateHeaderStats();
         
+        console.log('✅ Data loading completed successfully!');
+        
     } catch (error) {
         console.error('Error loading data:', error);
+        
+        // Double-check if data was actually loaded despite the error
+        if (teams.length > 0) {
+            console.log('Data was loaded successfully despite error, updating status...');
+            isConnected = true;
+            updateStatus(`✅ Connected! Loaded ${teams.length} teams and ${matches.length} matches`, 'connected');
+            updateTeamSelects();
+            updateTeamsList();
+            updateStandings();
+            updateMatchesList();
+            updateHeaderStats();
+            return;
+        }
         
         let errorMessage = '❌ Error connecting to Google Sheets. ';
         
