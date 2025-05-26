@@ -903,10 +903,8 @@ input::placeholder {
     font-weight: 800;
     color: var(--primary);
     margin-bottom: var(--spacing-xs);
-    overflow: hidden;
     word-wrap: break-word;
     line-height: 1.2;
-    max-height: 4em;
 }
 
 .metric-label {
