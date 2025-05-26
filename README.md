@@ -236,26 +236,3 @@ git push origin main
 5. Submit a Pull Request
 
 ---
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 🙋‍♂️ Support
-
-- **Issues**: [GitHub Issues](https://github.com/shobith-s/cricket_league_tracker/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shobith-s/cricket_league_tracker/discussions)
-
----
-
-## 🎉 Acknowledgments
-
-- Built with ❤️ for cricket enthusiasts
-- Inspired by the need for simple, effective league management
-- Thanks to the open-source community for tools and inspiration
-
----
-
-**⭐ Star this repo if you find it useful!**
