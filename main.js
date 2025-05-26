@@ -772,29 +772,43 @@ function updateAnalytics() {
 }
 
 function updateKeyMetrics() {
-    const winPercentageEl = document.getElementById('win-percentage');
+    const teams50plusEl = document.getElementById('teams-50plus');
     const teams30plusEl = document.getElementById('teams-30plus');
     const highestRunScorerEl = document.getElementById('highest-run-scorer');
     const totalRunsEl = document.getElementById('total-runs');
     
     if (matches.length === 0) {
-        if (winPercentageEl) winPercentageEl.textContent = '0%';
+        if (teams50plusEl) teams50plusEl.textContent = '-';
         if (teams30plusEl) teams30plusEl.textContent = '0';
         if (highestRunScorerEl) highestRunScorerEl.textContent = '-';
         if (totalRunsEl) totalRunsEl.textContent = '0';
         return;
     }
     
-    // Calculate average win percentage
-    let totalWinRate = 0;
-    teams.forEach(team => {
-        const stats = getTeamStats(team);
-        if (stats.played > 0) {
-            totalWinRate += (stats.won / stats.played) * 100;
+    // Calculate teams with most 50+ scores
+    const team50plusCounts = {};
+    matches.forEach(match => {
+        if (match.team1Runs >= 50) {
+            team50plusCounts[match.team1] = (team50plusCounts[match.team1] || 0) + 1;
+        }
+        if (match.team2Runs >= 50) {
+            team50plusCounts[match.team2] = (team50plusCounts[match.team2] || 0) + 1;
         }
     });
-    const avgWinRate = teams.length > 0 ? (totalWinRate / teams.length).toFixed(1) : '0.0';
-    if (winPercentageEl) winPercentageEl.textContent = `${avgWinRate}%`;
+
+    const counts50 = Object.keys(team50plusCounts).map(team => team50plusCounts[team]);
+    const max50Count = counts50.length > 0 ? Math.max(...counts50) : 0;
+    const top50Teams = Object.keys(team50plusCounts).filter(team => team50plusCounts[team] === max50Count);
+
+    if (teams50plusEl) {
+        if (max50Count === 0) {
+            teams50plusEl.textContent = '-';
+        } else if (top50Teams.length === 1) {
+            teams50plusEl.textContent = `${top50Teams[0]} (${max50Count})`;
+        } else {
+            teams50plusEl.textContent = `${top50Teams.join(', ')} (${max50Count})`;
+        }
+    }
     
     // Calculate teams with most 30+ scores (>=30 && <50)
     const team30plusCounts = {};
@@ -807,7 +821,8 @@ function updateKeyMetrics() {
         }
     });
     
-    const maxCount = Math.max(...Object.values(team30plusCounts), 0);
+    const counts30 = Object.keys(team30plusCounts).map(team => team30plusCounts[team]);
+    const maxCount = counts30.length > 0 ? Math.max(...counts30) : 0;
     const topTeams = Object.keys(team30plusCounts).filter(team => team30plusCounts[team] === maxCount);
     
     if (teams30plusEl) {
