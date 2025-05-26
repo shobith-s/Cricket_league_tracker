@@ -285,29 +285,67 @@ function connectToSheet() {
 }
 
 async function loadData() {
-    if (!sheetId) { updateStatus('Please connect to Google Sheets first', 'error'); return; }
+    if (!sheetId) { 
+        updateStatus('Please connect to Google Sheets first', 'error'); 
+        return; 
+    }
+    
     try {
         updateStatus('Loading data...', 'loading');
+        
+        // Test sheet accessibility first
+        console.log('Testing sheet ID:', sheetId);
+        
         // Teams
         const teamsUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Teams`;
+        console.log('Fetching teams from:', teamsUrl);
+        
         const teamsResponse = await fetch(teamsUrl);
+        
+        if (!teamsResponse.ok) {
+            throw new Error(`HTTP ${teamsResponse.status}: ${teamsResponse.statusText}`);
+        }
+        
         const teamsText = await teamsResponse.text();
+        console.log('Teams response length:', teamsText.length);
+        
+        // Check if response contains error
+        if (teamsText.includes('Invalid input') || teamsText.includes('error') || teamsText.length < 50) {
+            throw new Error('Invalid sheet ID or sheet not accessible');
+        }
+        
         const teamsData = JSON.parse(teamsText.substr(47).slice(0, -2));
         teams = [];
-        if (teamsData.table.rows) {
+        
+        if (teamsData.table && teamsData.table.rows) {
             teamsData.table.rows.forEach(row => {
-                if (row.c[0] && row.c[0].v) teams.push(row.c[0].v);
+                if (row.c && row.c[0] && row.c[0].v) {
+                    teams.push(row.c[0].v);
+                }
             });
         }
+        
+        console.log('Loaded teams:', teams);
+        
         // Matches
         const matchesUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Matches`;
+        console.log('Fetching matches from:', matchesUrl);
+        
         const matchesResponse = await fetch(matchesUrl);
+        
+        if (!matchesResponse.ok) {
+            throw new Error(`HTTP ${matchesResponse.status}: ${matchesResponse.statusText}`);
+        }
+        
         const matchesText = await matchesResponse.text();
+        console.log('Matches response length:', matchesText.length);
+        
         const matchesData = JSON.parse(matchesText.substr(47).slice(0, -2));
         matches = [];
-        if (matchesData.table.rows) {
+        
+        if (matchesData.table && matchesData.table.rows) {
             matchesData.table.rows.forEach(row => {
-                if (row.c[0] && row.c[0].v) {
+                if (row.c && row.c[0] && row.c[0].v) {
                     matches.push({
                         team1: row.c[0]?.v || '',
                         team2: row.c[1]?.v || '',
@@ -321,17 +359,99 @@ async function loadData() {
                 }
             });
         }
+        
+        console.log('Loaded matches:', matches);
+        
         isConnected = true;
-        updateStatus('✅ Connected to Google Sheets - Data loaded successfully!', 'connected');
+        updateStatus(`✅ Connected! Loaded ${teams.length} teams and ${matches.length} matches`, 'connected');
         updateTeamSelects();
         updateTeamsList();
         updateStandings();
         updateMatchesList();
+        
+        // Update header stats
+        updateHeaderStats();
+        
     } catch (error) {
         console.error('Error loading data:', error);
-        updateStatus('❌ Error connecting to Google Sheets. Check your Sheet ID and make sure it\'s public.', 'error');
+        
+        let errorMessage = '❌ Error connecting to Google Sheets. ';
+        
+        if (error.message.includes('Invalid input') || error.message.includes('404')) {
+            errorMessage += 'Sheet ID not found or invalid.';
+        } else if (error.message.includes('403')) {
+            errorMessage += 'Sheet is not public. Please make it viewable by anyone with the link.';
+        } else if (error.message.includes('CORS') || error.message.includes('network')) {
+            errorMessage += 'Network error. Please check your internet connection.';
+        } else {
+            errorMessage += 'Please check your Sheet ID and make sure it\'s public.';
+        }
+        
+        updateStatus(errorMessage, 'error');
         isConnected = false;
+        
+        // Show troubleshooting tips
+        showTroubleshootingTips();
     }
+}
+
+function showTroubleshootingTips() {
+    const statusEl = document.getElementById('status');
+    if (statusEl) {
+        statusEl.innerHTML += `
+            <div style="margin-top: 10px; font-size: 12px; line-height: 1.4; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <strong>🔧 Troubleshooting Tips:</strong><br>
+                1. Make sure your Google Sheet is <strong>public</strong> (Anyone with link can view)<br>
+                2. Your sheet should have <strong>"Teams"</strong> and <strong>"Matches"</strong> tabs<br>
+                3. Teams tab should have team names in column A<br>
+                4. Matches tab should have: Team1, Team2, Team1Runs, Team1Overs, Team2Runs, Team2Overs, Winner, Date<br>
+                5. Try the default sheet ID: <code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">${DEFAULT_SHEET_ID}</code><br>
+                6. Check browser console (F12) for detailed error messages<br>
+                <br>
+                <button onclick="createSampleSheet()" style="background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-top: 5px;">
+                    📋 Create Sample Sheet Template
+                </button>
+            </div>
+        `;
+    }
+}
+
+function createSampleSheet() {
+    const instructions = `
+To create a Google Sheet for this app:
+
+1. Go to https://sheets.google.com
+2. Create a new sheet
+3. Create two tabs: "Teams" and "Matches"
+
+Teams Tab (Column A):
+- Mumbai Indians
+- Chennai Super Kings
+- Royal Challengers Bangalore
+- Delhi Capitals
+
+Matches Tab (Columns A-H):
+Team1 | Team2 | Team1Runs | Team1Overs | Team2Runs | Team2Overs | Winner | Date
+Mumbai Indians | Chennai Super Kings | 180 | 20 | 175 | 20 | Mumbai Indians | 2024-01-15
+
+4. Make the sheet public:
+   - Click "Share" button
+   - Change "Restricted" to "Anyone with the link"
+   - Set permission to "Viewer"
+   - Copy the sheet ID from the URL
+
+5. The sheet ID is the long string in the URL:
+   https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit
+
+Example working sheet: ${DEFAULT_SHEET_ID}
+    `;
+    
+    alert(instructions);
+}
+
+function testDefaultSheet() {
+    document.getElementById('sheet-id').value = DEFAULT_SHEET_ID;
+    connectToSheet();
 }
 
 function updateTeamSelects() {

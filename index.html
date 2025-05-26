@@ -55,10 +55,15 @@
 
         <div class="card connect-card">
             <input type="text" id="sheet-id" placeholder="Google Sheet ID" autocomplete="off">
-            <button class="btn primary" onclick="connectToSheet()">
-                <span class="btn-text">Connect</span>
-                <span class="btn-loader"></span>
-            </button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn primary" onclick="connectToSheet()" style="flex: 1;">
+                    <span class="btn-text">Connect</span>
+                    <span class="btn-loader"></span>
+                </button>
+                <button class="btn secondary" onclick="testDefaultSheet()" title="Test with sample data">
+                    <span class="btn-text">📋 Test</span>
+                </button>
+            </div>
         </div>
 
         <nav class="tabbar" id="tabbar">
