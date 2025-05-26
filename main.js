@@ -127,6 +127,25 @@ function updateThemeIcon() {
     }
 }
 
+function toggleMetricCard(metricId) {
+    const card = document.getElementById(metricId).closest('.metric-card');
+    const isExpanded = card.classList.contains('expanded');
+    
+    // Close all other expanded cards first
+    document.querySelectorAll('.expandable-card.expanded').forEach(expandedCard => {
+        if (expandedCard !== card) {
+            expandedCard.classList.remove('expanded');
+        }
+    });
+    
+    // Toggle current card
+    if (isExpanded) {
+        card.classList.remove('expanded');
+    } else {
+        card.classList.add('expanded');
+    }
+}
+
 function updateStatus(message, type = 'loading') {
     const status = document.getElementById('status');
     status.textContent = message;

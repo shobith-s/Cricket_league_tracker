@@ -874,6 +874,60 @@ input::placeholder {
     margin-bottom: var(--spacing-lg);
 }
 
+/* Mobile-first: 2x2 grid for better space utilization */
+@media (max-width: 767px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    /* On mobile, expandable cards span full width when expanded */
+    .metrics-grid .expandable-card.expanded {
+        grid-column: span 2;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    /* Optimize card sizing for mobile */
+    .metric-card {
+        height: 120px !important;
+        padding: var(--spacing-md) !important;
+    }
+    
+    /* Disable text truncation on mobile for better readability */
+    .expandable-card:not(.expanded) .metric-value {
+        width: auto !important;
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 0.85rem !important;
+        line-height: 1.2 !important;
+    }
+    
+    /* Smaller icons and labels on mobile */
+    .metric-icon {
+        font-size: var(--font-lg) !important;
+        margin-bottom: var(--spacing-xs) !important;
+    }
+    
+    .metric-label {
+        font-size: 0.75rem !important;
+        line-height: 1.1 !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 150px 150px 1fr 1fr;
+    }
+    
+    /* When cards are expanded, use equal widths */
+    .metrics-grid .expandable-card.expanded {
+        grid-column: span 2;
+    }
+}
+
 .metric-card {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -886,6 +940,7 @@ input::placeholder {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
 }
 
 .metric-card:hover {
@@ -905,6 +960,64 @@ input::placeholder {
     margin-bottom: var(--spacing-xs);
     word-wrap: break-word;
     line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* Ensure truncation works for expandable cards when collapsed */
+.expandable-card:not(.expanded) {
+    max-width: 150px;
+    overflow: hidden;
+}
+
+.expandable-card:not(.expanded) .metric-value {
+    width: 80px !important;
+    max-width: 80px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* Expandable card styles */
+.expandable-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.expandable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.expandable-card.expanded {
+    grid-column: span 2;
+    z-index: 10;
+}
+
+.expandable-card.expanded .metric-value {
+    white-space: normal;
+    text-overflow: unset;
+    max-height: none;
+}
+
+/* Add a small indicator for expandable cards */
+.expandable-card::after {
+    content: "👆";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.expandable-card.expanded::after {
+    content: "👇";
 }
 
 .metric-label {
