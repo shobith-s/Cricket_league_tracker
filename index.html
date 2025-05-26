@@ -3,66 +3,192 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🏏 Cricket League Manager</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#694ef7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Cricket League">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏏</text></svg>">
 </head>
 
 <body>
     <div class="app-bg"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-animation">
+            <div class="cricket-ball">🏏</div>
+            <div class="loading-text">Loading Cricket League...</div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
     <div class="container">
         <header class="main-header">
-            <div class="emoji">🏏</div>
-            <h1>Cricket League Manager</h1>
+            <div class="header-content">
+                <div class="emoji">🏏</div>
+                <h1>Cricket League Manager</h1>
+                <div class="header-stats" id="header-stats">
+                    <span class="stat-item">
+                        <span class="stat-value" id="total-teams">0</span>
+                        <span class="stat-label">Teams</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="stat-value" id="total-matches">0</span>
+                        <span class="stat-label">Matches</span>
+                    </span>
+                </div>
+            </div>
         </header>
+
         <div id="status" class="status connected">
             ✅ Connected to Google Sheets - Data loaded successfully!
         </div>
+
         <div class="card connect-card">
-            <input type="text" id="sheet-id" placeholder="Google Sheet ID">
-            <button class="btn primary" onclick="connectToSheet()">Connect</button>
+            <input type="text" id="sheet-id" placeholder="Google Sheet ID" autocomplete="off">
+            <button class="btn primary" onclick="connectToSheet()">
+                <span class="btn-text">Connect</span>
+                <span class="btn-loader"></span>
+            </button>
         </div>
 
-        <nav class="tabbar">
-            <button class="tab-link active" onclick="showTab('add-match')">Add Match</button>
-            <button class="tab-link" onclick="showTab('standings')">Standings</button>
-            <button class="tab-link" onclick="showTab('matches')">All Matches</button>
-            <button class="tab-link" onclick="showTab('teams')">Teams</button>
-            <button class="tab-link" onclick="showTab('setup')">Setup</button>
+        <nav class="tabbar" id="tabbar">
+            <button class="tab-link active" onclick="showTab('add-match')" data-tab="add-match">
+                <span class="tab-icon">⚡</span>
+                <span class="tab-text">Add Match</span>
+            </button>
+            <button class="tab-link" onclick="showTab('standings')" data-tab="standings">
+                <span class="tab-icon">🏆</span>
+                <span class="tab-text">Standings</span>
+            </button>
+            <button class="tab-link" onclick="showTab('matches')" data-tab="matches">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Matches</span>
+            </button>
+            <button class="tab-link" onclick="showTab('teams')" data-tab="teams">
+                <span class="tab-icon">👥</span>
+                <span class="tab-text">Teams</span>
+            </button>
+            <button class="tab-link" onclick="showTab('analytics')" data-tab="analytics">
+                <span class="tab-icon">📈</span>
+                <span class="tab-text">Analytics</span>
+            </button>
         </nav>
 
-        <main class="tab-views">
+        <main class="tab-views" id="tab-views">
 
             <!-- Add Match Tab -->
             <section id="add-match" class="tab-view active">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>Add New Match</h2>
+                <div class="tab-header">
+                    <h2>Add New Match</h2>
+                    <button class="btn refresh-btn" onclick="loadData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+
                 <form id="match-form">
                     <div class="form-card">
-                        <div class="form-team-row">
-                            <select id="team1" required class="team-select"></select>
-                            <span class="vs-text">vs</span>
-                            <select id="team2" required class="team-select"></select>
+                        <div class="match-setup">
+                            <div class="team-selection">
+                                <div class="team-selector">
+                                    <label for="team1">Team 1</label>
+                                    <select id="team1" required class="team-select">
+                                        <option value="">Select Team 1</option>
+                                    </select>
+                                </div>
+                                <div class="vs-divider">
+                                    <span class="vs-text">VS</span>
+                                </div>
+                                <div class="team-selector">
+                                    <label for="team2">Team 2</label>
+                                    <select id="team2" required class="team-select">
+                                        <option value="">Select Team 2</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-score-row">
-                            <input type="number" id="team1-runs" min="0" placeholder="Team 1 Runs" required>
-                            <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="Team 1 Overs" required>
+
+                        <div class="score-input-section">
+                            <div class="team-score-card" id="team1-score-card">
+                                <h4 class="team-name" id="team1-name">Team 1</h4>
+                                <div class="score-inputs">
+                                    <div class="input-group">
+                                        <label for="team1-runs">Runs</label>
+                                        <input type="number" id="team1-runs" min="0" max="999" placeholder="0" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="team1-overs">Overs</label>
+                                        <input type="number" id="team1-overs" min="0" step="0.1" max="20" placeholder="0.0" required>
+                                    </div>
+                                </div>
+                                <div class="run-rate" id="team1-rate">Run Rate: 0.00</div>
+                            </div>
+
+                            <div class="team-score-card" id="team2-score-card">
+                                <h4 class="team-name" id="team2-name">Team 2</h4>
+                                <div class="score-inputs">
+                                    <div class="input-group">
+                                        <label for="team2-runs">Runs</label>
+                                        <input type="number" id="team2-runs" min="0" max="999" placeholder="0" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="team2-overs">Overs</label>
+                                        <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="0.0" required>
+                                    </div>
+                                </div>
+                                <div class="run-rate" id="team2-rate">Run Rate: 0.00</div>
+                            </div>
                         </div>
-                        <div class="form-score-row">
-                            <input type="number" id="team2-runs" min="0" placeholder="Team 2 Runs" required>
-                            <input type="number" id="team2-overs" min="0" step="0.1" max="20" placeholder="Team 2 Overs" required>
+
+                        <div class="match-result" id="match-result">
+                            <div class="result-text">Select teams and enter scores</div>
                         </div>
-                        <button class="btn primary" id="add-match-btn" type="submit">Add Match</button>
+
+                        <button class="btn primary submit-btn" id="add-match-btn" type="submit">
+                            <span class="btn-text">Add Match</span>
+                            <span class="btn-icon">⚡</span>
+                        </button>
                     </div>
-                    </form>
+                </form>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="clearForm()">
+                        <span class="quick-icon">🗑️</span>
+                        <span>Clear</span>
+                    </button>
+                    <button class="quick-btn" onclick="randomMatch()">
+                        <span class="quick-icon">🎲</span>
+                        <span>Random</span>
+                    </button>
+                </div>
             </section>
             
             <!-- Standings Tab -->
             <section id="standings" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>League Standings</h2>
-                <div class="table-container">
+                <div class="tab-header">
+                    <h2>League Standings</h2>
+                    <button class="btn refresh-btn" onclick="loadData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+
+                <!-- Standings Cards for Mobile -->
+                <div class="standings-cards" id="standings-cards"></div>
+
+                <!-- Traditional Table for Desktop -->
+                <div class="table-container desktop-only">
                     <table id="standings-table">
                         <thead>
                             <tr>
@@ -78,46 +204,170 @@
                         <tbody id="standings-body"></tbody>
                     </table>
                 </div>
+
+                <!-- League Summary -->
+                <div class="league-summary">
+                    <div class="summary-card">
+                        <div class="summary-title">League Leader</div>
+                        <div class="summary-value" id="league-leader">-</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">Highest NRR</div>
+                        <div class="summary-value" id="highest-nrr">-</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">Most Wins</div>
+                        <div class="summary-value" id="most-wins">-</div>
+                    </div>
+                </div>
             </section>
 
             <!-- All Matches Tab -->
             <section id="matches" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>All Matches</h2>
-                <div id="matches-list"></div>
+                <div class="tab-header">
+                    <h2>All Matches</h2>
+                    <button class="btn refresh-btn" onclick="loadData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+
+                <!-- Match Filters -->
+                <div class="match-filters">
+                    <select id="team-filter" onchange="filterMatches()">
+                        <option value="">All Teams</option>
+                    </select>
+                    <select id="result-filter" onchange="filterMatches()">
+                        <option value="">All Results</option>
+                        <option value="won">Wins Only</option>
+                        <option value="lost">Losses Only</option>
+                    </select>
+                </div>
+
+                <!-- Match Statistics -->
+                <div class="match-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-matches-stat">0</div>
+                        <div class="stat-label">Total Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-score-stat">0</div>
+                        <div class="stat-label">Avg Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="highest-score-stat">0</div>
+                        <div class="stat-label">Highest Score</div>
+                    </div>
+                </div>
+
+                <div id="matches-list" class="matches-list"></div>
             </section>
 
             <!-- Manage Teams Tab -->
             <section id="teams" class="tab-view">
-                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-                <h2>Manage Teams</h2>
+                <div class="tab-header">
+                    <h2>Manage Teams</h2>
+                    <button class="btn refresh-btn" onclick="loadData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+
                 <form id="team-form">
                     <div class="form-card">
-                        <input type="text" id="team-name" placeholder="Team Name" required>
-                        <button class="btn primary" type="submit">Add Team</button>
+                        <div class="input-group">
+                            <label for="team-name">Team Name</label>
+                            <input type="text" id="team-name" placeholder="Enter team name" required autocomplete="off">
+                        </div>
+                        <button class="btn primary" type="submit">
+                            <span class="btn-text">Add Team</span>
+                            <span class="btn-icon">➕</span>
+                        </button>
                     </div>
                 </form>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Team Name</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teams-list"></tbody>
-                    </table>
+
+                <div class="teams-grid" id="teams-grid"></div>
+
+                <!-- Team Performance Overview -->
+                <div class="team-performance" id="team-performance">
+                    <h3>Team Performance Overview</h3>
+                    <div class="performance-cards" id="performance-cards"></div>
                 </div>
             </section>
 
-            <!-- Setup Instructions Tab -->
-            <section id="setup" class="tab-view">
-                <h2>Setup Instructions</h2>
-                <div class="setup-card">
-                    <p>
-                        1. Create a Google Sheet as described<br>
-                        2. Make it public<br>
-                        3. Paste your Sheet ID above and connect.
-                    </p>
+            <!-- Analytics Tab -->
+            <section id="analytics" class="tab-view">
+                <div class="tab-header">
+                    <h2>Analytics & Insights</h2>
+                    <button class="btn refresh-btn" onclick="loadData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="analytics-section">
+                    <h3>Key Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">🏆</div>
+                            <div class="metric-value" id="win-percentage">0%</div>
+                            <div class="metric-label">Avg Win Rate</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">⚡</div>
+                            <div class="metric-value" id="avg-run-rate">0.00</div>
+                            <div class="metric-label">Avg Run Rate</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">🎯</div>
+                            <div class="metric-value" id="close-matches">0</div>
+                            <div class="metric-label">Close Matches</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">📊</div>
+                            <div class="metric-value" id="total-runs">0</div>
+                            <div class="metric-label">Total Runs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Charts -->
+                <div class="analytics-section">
+                    <h3>Performance Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="performance-chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Team Comparison -->
+                <div class="analytics-section">
+                    <h3>Team Comparison</h3>
+                    <div class="comparison-controls">
+                        <select id="compare-team1">
+                            <option value="">Select Team 1</option>
+                        </select>
+                        <span class="vs-text">VS</span>
+                        <select id="compare-team2">
+                            <option value="">Select Team 2</option>
+                        </select>
+                    </div>
+                    <div class="comparison-result" id="comparison-result"></div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="analytics-section">
+                    <h3>Export Data</h3>
+                    <div class="export-buttons">
+                        <button class="btn secondary" onclick="exportToPDF()">
+                            <span class="btn-icon">📄</span>
+                            <span>Export PDF</span>
+                        </button>
+                        <button class="btn secondary" onclick="shareResults()">
+                            <span class="btn-icon">📤</span>
+                            <span>Share Results</span>
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>

@@ -3,11 +3,129 @@ const APPS_SCRIPT_URL = "https://gsheet-cors-proxy.shobi7196.workers.dev/";
 const DEFAULT_SHEET_ID = "1gBvi2v5LYHUMBsbSwAoUfLpDPG_zN_KBzMNq55K03fY";
 
 let teams = [], matches = [], sheetId = DEFAULT_SHEET_ID, isConnected = false;
+let currentTheme = localStorage.getItem('theme') || 'light';
+let touchStartX = 0;
+let touchEndX = 0;
+let currentTab = 'add-match';
 
+// Initialize app
 window.onload = () => {
-    document.getElementById('sheet-id').value = DEFAULT_SHEET_ID;
-    document.getElementById('setup-section').classList.remove('active');
+    initializeApp();
 };
+
+function initializeApp() {
+    // Show loading screen
+    showLoadingScreen();
+    
+    // Set theme
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    updateThemeIcon();
+    
+    // Set default sheet ID
+    document.getElementById('sheet-id').value = DEFAULT_SHEET_ID;
+    
+    // Add event listeners
+    addEventListeners();
+    
+    // Hide loading screen after a short delay
+    setTimeout(() => {
+        hideLoadingScreen();
+        // Auto-load data if default sheet ID is set
+        if (DEFAULT_SHEET_ID) {
+            loadData();
+        }
+    }, 1500);
+}
+
+function showLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden');
+    }
+}
+
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+    }
+}
+
+function addEventListeners() {
+    // Touch events for swipe navigation
+    const tabViews = document.getElementById('tab-views');
+    if (tabViews) {
+        tabViews.addEventListener('touchstart', handleTouchStart, { passive: true });
+        tabViews.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+    
+    // Form input listeners for real-time calculations
+    const team1Runs = document.getElementById('team1-runs');
+    const team1Overs = document.getElementById('team1-overs');
+    const team2Runs = document.getElementById('team2-runs');
+    const team2Overs = document.getElementById('team2-overs');
+    const team1Select = document.getElementById('team1');
+    const team2Select = document.getElementById('team2');
+    
+    if (team1Runs) team1Runs.addEventListener('input', updateMatchPreview);
+    if (team1Overs) team1Overs.addEventListener('input', updateMatchPreview);
+    if (team2Runs) team2Runs.addEventListener('input', updateMatchPreview);
+    if (team2Overs) team2Overs.addEventListener('input', updateMatchPreview);
+    if (team1Select) team1Select.addEventListener('change', updateTeamNames);
+    if (team2Select) team2Select.addEventListener('change', updateTeamNames);
+    
+    // Form submission
+    const matchForm = document.getElementById('match-form');
+    if (matchForm) {
+        matchForm.addEventListener('submit', handleMatchSubmit);
+    }
+    
+    const teamForm = document.getElementById('team-form');
+    if (teamForm) {
+        teamForm.addEventListener('submit', handleTeamSubmit);
+    }
+}
+
+function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}
+
+function handleTouchEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        const tabs = ['add-match', 'standings', 'matches', 'teams', 'analytics'];
+        const currentIndex = tabs.indexOf(currentTab);
+        
+        if (diff > 0 && currentIndex < tabs.length - 1) {
+            // Swipe left - next tab
+            showTab(tabs[currentIndex + 1]);
+        } else if (diff < 0 && currentIndex > 0) {
+            // Swipe right - previous tab
+            showTab(tabs[currentIndex - 1]);
+        }
+    }
+}
+
+function toggleTheme() {
+    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    localStorage.setItem('theme', currentTheme);
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+    }
+}
 
 function updateStatus(message, type = 'loading') {
     const status = document.getElementById('status');
@@ -16,15 +134,146 @@ function updateStatus(message, type = 'loading') {
 }
 
 function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
-    document.getElementById('setup-section').classList.toggle('active', tabName === 'setup');
+    // Update current tab
+    currentTab = tabName;
+    
+    // Remove active class from all tabs and tab links
+    document.querySelectorAll('.tab-view').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+    
+    // Add active class to selected tab and tab link
+    const selectedTab = document.getElementById(tabName);
+    const selectedTabLink = document.querySelector(`[data-tab="${tabName}"]`);
+    
+    if (selectedTab) selectedTab.classList.add('active');
+    if (selectedTabLink) selectedTabLink.classList.add('active');
+    
+    // Update content based on tab
     if (isConnected) {
-        if (tabName === 'standings') updateStandings();
-        else if (tabName === 'matches') updateMatchesList();
+        switch(tabName) {
+            case 'standings':
+                updateStandings();
+                updateStandingsCards();
+                break;
+            case 'matches':
+                updateMatchesList();
+                updateMatchStats();
+                break;
+            case 'teams':
+                updateTeamsList();
+                updateTeamsGrid();
+                updatePerformanceCards();
+                break;
+            case 'analytics':
+                updateAnalytics();
+                break;
+        }
     }
+}
+
+function updateTeamNames() {
+    const team1Select = document.getElementById('team1');
+    const team2Select = document.getElementById('team2');
+    const team1Name = document.getElementById('team1-name');
+    const team2Name = document.getElementById('team2-name');
+    
+    if (team1Name && team1Select) {
+        team1Name.textContent = team1Select.value || 'Team 1';
+    }
+    if (team2Name && team2Select) {
+        team2Name.textContent = team2Select.value || 'Team 2';
+    }
+    
+    updateMatchPreview();
+}
+
+function updateMatchPreview() {
+    const team1Runs = parseInt(document.getElementById('team1-runs')?.value) || 0;
+    const team1Overs = parseFloat(document.getElementById('team1-overs')?.value) || 0;
+    const team2Runs = parseInt(document.getElementById('team2-runs')?.value) || 0;
+    const team2Overs = parseFloat(document.getElementById('team2-overs')?.value) || 0;
+    const team1Name = document.getElementById('team1')?.value || 'Team 1';
+    const team2Name = document.getElementById('team2')?.value || 'Team 2';
+    
+    // Update run rates
+    const team1Rate = team1Overs > 0 ? (team1Runs / team1Overs).toFixed(2) : '0.00';
+    const team2Rate = team2Overs > 0 ? (team2Runs / team2Overs).toFixed(2) : '0.00';
+    
+    const team1RateEl = document.getElementById('team1-rate');
+    const team2RateEl = document.getElementById('team2-rate');
+    
+    if (team1RateEl) team1RateEl.textContent = `Run Rate: ${team1Rate}`;
+    if (team2RateEl) team2RateEl.textContent = `Run Rate: ${team2Rate}`;
+    
+    // Update match result preview
+    const resultEl = document.getElementById('match-result');
+    const resultTextEl = resultEl?.querySelector('.result-text');
+    
+    if (resultTextEl && team1Name && team2Name && team1Runs > 0 && team2Runs > 0) {
+        let resultText = '';
+        if (team1Runs > team2Runs) {
+            const margin = team1Runs - team2Runs;
+            resultText = `${team1Name} wins by ${margin} runs`;
+        } else if (team2Runs > team1Runs) {
+            const margin = team2Runs - team1Runs;
+            resultText = `${team2Name} wins by ${margin} runs`;
+        } else {
+            resultText = 'Match tied!';
+        }
+        resultTextEl.textContent = resultText;
+    } else if (resultTextEl) {
+        resultTextEl.textContent = 'Select teams and enter scores';
+    }
+}
+
+function clearForm() {
+    document.getElementById('team1').value = '';
+    document.getElementById('team2').value = '';
+    document.getElementById('team1-runs').value = '';
+    document.getElementById('team1-overs').value = '';
+    document.getElementById('team2-runs').value = '';
+    document.getElementById('team2-overs').value = '';
+    updateTeamNames();
+    updateMatchPreview();
+}
+
+function randomMatch() {
+    if (teams.length < 2) {
+        alert('Need at least 2 teams for a random match');
+        return;
+    }
+    
+    // Select random teams
+    const shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+    const team1 = shuffledTeams[0];
+    const team2 = shuffledTeams[1];
+    
+    // Generate random scores
+    const team1Runs = Math.floor(Math.random() * 200) + 50;
+    const team2Runs = Math.floor(Math.random() * 200) + 50;
+    const team1Overs = Math.floor(Math.random() * 20) + 1;
+    const team2Overs = Math.floor(Math.random() * 20) + 1;
+    
+    // Fill form
+    document.getElementById('team1').value = team1;
+    document.getElementById('team2').value = team2;
+    document.getElementById('team1-runs').value = team1Runs;
+    document.getElementById('team1-overs').value = team1Overs;
+    document.getElementById('team2-runs').value = team2Runs;
+    document.getElementById('team2-overs').value = team2Overs;
+    
+    updateTeamNames();
+    updateMatchPreview();
+}
+
+function handleMatchSubmit(e) {
+    e.preventDefault();
+    addMatch();
+}
+
+function handleTeamSubmit(e) {
+    e.preventDefault();
+    addTeam();
 }
 
 function connectToSheet() {
@@ -247,8 +496,323 @@ function updateMatchesList() {
     });
 }
 
-// Form listeners
-document.getElementById('team-form').addEventListener('submit', function (e) { e.preventDefault(); addTeam(); });
-document.getElementById('match-form').addEventListener('submit', function (e) { e.preventDefault(); addMatch(); });
+// Enhanced functions for new features
+
+function updateStandingsCards() {
+    const standingsCards = document.getElementById('standings-cards');
+    if (!standingsCards) return;
+    
+    const standings = [];
+    teams.forEach(team => {
+        const stats = getTeamStats(team);
+        const nrr = calculateNRR(team);
+        standings.push({ team, ...stats, nrr: parseFloat(nrr) });
+    });
+    standings.sort((a, b) => b.points !== a.points ? b.points - a.points : b.nrr - a.nrr);
+    
+    standingsCards.innerHTML = '';
+    standings.forEach((team, index) => {
+        const nrrClass = team.nrr > 0 ? 'nrr-positive' : team.nrr < 0 ? 'nrr-negative' : '';
+        const rankClass = index < 3 ? `rank-${index + 1}` : '';
+        
+        standingsCards.innerHTML += `
+            <div class="standing-card ${rankClass}">
+                <div class="standing-header">
+                    <div class="team-rank">${index + 1}</div>
+                    <div class="team-name-standing">${team.team}</div>
+                </div>
+                <div class="standing-stats">
+                    <div class="standing-stat">
+                        <div class="stat-number">${team.played}</div>
+                        <div class="stat-label">Matches</div>
+                    </div>
+                    <div class="standing-stat">
+                        <div class="stat-number">${team.won}</div>
+                        <div class="stat-label">Won</div>
+                    </div>
+                    <div class="standing-stat">
+                        <div class="stat-number">${team.points}</div>
+                        <div class="stat-label">Points</div>
+                    </div>
+                </div>
+                <div class="run-rate ${nrrClass}">NRR: ${team.nrr.toFixed(3)}</div>
+            </div>
+        `;
+    });
+    
+    // Update league summary
+    updateLeagueSummary(standings);
+}
+
+function updateLeagueSummary(standings) {
+    if (standings.length === 0) return;
+    
+    const leaderEl = document.getElementById('league-leader');
+    const highestNrrEl = document.getElementById('highest-nrr');
+    const mostWinsEl = document.getElementById('most-wins');
+    
+    if (leaderEl) leaderEl.textContent = standings[0].team;
+    
+    const highestNrr = standings.reduce((max, team) => team.nrr > max.nrr ? team : max);
+    if (highestNrrEl) highestNrrEl.textContent = `${highestNrr.team} (${highestNrr.nrr.toFixed(3)})`;
+    
+    const mostWins = standings.reduce((max, team) => team.won > max.won ? team : max);
+    if (mostWinsEl) mostWinsEl.textContent = `${mostWins.team} (${mostWins.won})`;
+}
+
+function updateMatchStats() {
+    const totalMatchesStat = document.getElementById('total-matches-stat');
+    const avgScoreStat = document.getElementById('avg-score-stat');
+    const highestScoreStat = document.getElementById('highest-score-stat');
+    
+    if (totalMatchesStat) totalMatchesStat.textContent = matches.length;
+    
+    if (matches.length > 0) {
+        const totalRuns = matches.reduce((sum, match) => sum + match.team1Runs + match.team2Runs, 0);
+        const avgScore = Math.round(totalRuns / (matches.length * 2));
+        if (avgScoreStat) avgScoreStat.textContent = avgScore;
+        
+        const highestScore = Math.max(...matches.map(m => Math.max(m.team1Runs, m.team2Runs)));
+        if (highestScoreStat) highestScoreStat.textContent = highestScore;
+    } else {
+        if (avgScoreStat) avgScoreStat.textContent = '0';
+        if (highestScoreStat) highestScoreStat.textContent = '0';
+    }
+}
+
+function updateTeamsGrid() {
+    const teamsGrid = document.getElementById('teams-grid');
+    if (!teamsGrid) return;
+    
+    teamsGrid.innerHTML = '';
+    teams.forEach(team => {
+        const stats = getTeamStats(team);
+        const nrr = calculateNRR(team);
+        
+        teamsGrid.innerHTML += `
+            <div class="team-card">
+                <div class="team-card-name">${team}</div>
+                <div class="team-card-stats">
+                    <div>
+                        <div class="stat-number">${stats.played}</div>
+                        <div class="stat-label">Matches</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">${stats.won}</div>
+                        <div class="stat-label">Won</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">${nrr}</div>
+                        <div class="stat-label">NRR</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function updatePerformanceCards() {
+    const performanceCards = document.getElementById('performance-cards');
+    if (!performanceCards) return;
+    
+    performanceCards.innerHTML = '';
+    teams.forEach(team => {
+        const stats = getTeamStats(team);
+        const nrr = parseFloat(calculateNRR(team));
+        const winRate = stats.played > 0 ? ((stats.won / stats.played) * 100).toFixed(1) : '0.0';
+        
+        performanceCards.innerHTML += `
+            <div class="team-card">
+                <div class="team-card-name">${team}</div>
+                <div class="team-card-stats">
+                    <div>
+                        <div class="stat-number">${winRate}%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div>
+                        <div class="stat-number">${stats.points}</div>
+                        <div class="stat-label">Points</div>
+                    </div>
+                    <div>
+                        <div class="stat-number ${nrr > 0 ? 'text-success' : nrr < 0 ? 'text-error' : ''}">${nrr.toFixed(2)}</div>
+                        <div class="stat-label">NRR</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function updateAnalytics() {
+    updateKeyMetrics();
+    updateTeamComparison();
+}
+
+function updateKeyMetrics() {
+    const winPercentageEl = document.getElementById('win-percentage');
+    const avgRunRateEl = document.getElementById('avg-run-rate');
+    const closeMatchesEl = document.getElementById('close-matches');
+    const totalRunsEl = document.getElementById('total-runs');
+    
+    if (matches.length === 0) {
+        if (winPercentageEl) winPercentageEl.textContent = '0%';
+        if (avgRunRateEl) avgRunRateEl.textContent = '0.00';
+        if (closeMatchesEl) closeMatchesEl.textContent = '0';
+        if (totalRunsEl) totalRunsEl.textContent = '0';
+        return;
+    }
+    
+    // Calculate average win percentage
+    let totalWinRate = 0;
+    teams.forEach(team => {
+        const stats = getTeamStats(team);
+        if (stats.played > 0) {
+            totalWinRate += (stats.won / stats.played) * 100;
+        }
+    });
+    const avgWinRate = teams.length > 0 ? (totalWinRate / teams.length).toFixed(1) : '0.0';
+    if (winPercentageEl) winPercentageEl.textContent = `${avgWinRate}%`;
+    
+    // Calculate average run rate
+    let totalRunRate = 0;
+    let totalInnings = 0;
+    matches.forEach(match => {
+        if (match.team1Overs > 0) {
+            totalRunRate += match.team1Runs / match.team1Overs;
+            totalInnings++;
+        }
+        if (match.team2Overs > 0) {
+            totalRunRate += match.team2Runs / match.team2Overs;
+            totalInnings++;
+        }
+    });
+    const avgRunRate = totalInnings > 0 ? (totalRunRate / totalInnings).toFixed(2) : '0.00';
+    if (avgRunRateEl) avgRunRateEl.textContent = avgRunRate;
+    
+    // Count close matches (margin <= 20 runs)
+    const closeMatches = matches.filter(match => {
+        const margin = Math.abs(match.team1Runs - match.team2Runs);
+        return margin <= 20;
+    }).length;
+    if (closeMatchesEl) closeMatchesEl.textContent = closeMatches;
+    
+    // Calculate total runs
+    const totalRuns = matches.reduce((sum, match) => sum + match.team1Runs + match.team2Runs, 0);
+    if (totalRunsEl) totalRunsEl.textContent = totalRuns.toLocaleString();
+}
+
+function updateTeamComparison() {
+    const compareTeam1 = document.getElementById('compare-team1');
+    const compareTeam2 = document.getElementById('compare-team2');
+    
+    if (compareTeam1 && compareTeam2) {
+        // Clear and populate team options
+        compareTeam1.innerHTML = '<option value="">Select Team 1</option>';
+        compareTeam2.innerHTML = '<option value="">Select Team 2</option>';
+        
+        teams.forEach(team => {
+            compareTeam1.innerHTML += `<option value="${team}">${team}</option>`;
+            compareTeam2.innerHTML += `<option value="${team}">${team}</option>`;
+        });
+    }
+}
+
+function filterMatches() {
+    const teamFilter = document.getElementById('team-filter')?.value;
+    const resultFilter = document.getElementById('result-filter')?.value;
+    
+    let filteredMatches = [...matches];
+    
+    if (teamFilter) {
+        filteredMatches = filteredMatches.filter(match => 
+            match.team1 === teamFilter || match.team2 === teamFilter
+        );
+    }
+    
+    if (resultFilter === 'won' && teamFilter) {
+        filteredMatches = filteredMatches.filter(match => match.winner === teamFilter);
+    } else if (resultFilter === 'lost' && teamFilter) {
+        filteredMatches = filteredMatches.filter(match => 
+            match.winner !== teamFilter && match.winner !== 'Tie'
+        );
+    }
+    
+    // Update matches list with filtered results
+    const matchesList = document.getElementById('matches-list');
+    if (matchesList) {
+        matchesList.innerHTML = '';
+        if (filteredMatches.length === 0) {
+            matchesList.innerHTML = '<p>No matches found with current filters.</p>';
+            return;
+        }
+        
+        const reversedMatches = [...filteredMatches].reverse();
+        reversedMatches.forEach(match => {
+            const resultText = match.winner === 'Tie'
+                ? 'Match Tied'
+                : `${match.winner} won by ${Math.abs(match.team1Runs - match.team2Runs)} runs`;
+            matchesList.innerHTML += `
+                <div class="match-item">
+                    <div class="match-teams">${match.team1} vs ${match.team2}</div>
+                    <div class="match-score">
+                        <span>${match.team1}: ${match.team1Runs}/${match.team1Overs}</span>
+                        <span>${match.team2}: ${match.team2Runs}/${match.team2Overs}</span>
+                    </div>
+                    <div class="match-result">${resultText}</div>
+                    <small>Date: ${match.date}</small>
+                </div>
+            `;
+        });
+    }
+}
+
+function exportToPDF() {
+    alert('PDF export feature coming soon! This would generate a comprehensive league report.');
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Cricket League Results',
+            text: `Check out our cricket league standings! ${teams.length} teams, ${matches.length} matches played.`,
+            url: window.location.href
+        });
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('League URL copied to clipboard!');
+        }).catch(() => {
+            alert('Unable to share. Please copy the URL manually: ' + url);
+        });
+    }
+}
+
+function updateHeaderStats() {
+    const totalTeamsEl = document.getElementById('total-teams');
+    const totalMatchesEl = document.getElementById('total-matches');
+    
+    if (totalTeamsEl) totalTeamsEl.textContent = teams.length;
+    if (totalMatchesEl) totalMatchesEl.textContent = matches.length;
+}
+
+// Update the loadData function to include header stats
+const originalLoadData = loadData;
+loadData = async function() {
+    await originalLoadData();
+    updateHeaderStats();
+    
+    // Update team filter options
+    const teamFilter = document.getElementById('team-filter');
+    if (teamFilter) {
+        const currentValue = teamFilter.value;
+        teamFilter.innerHTML = '<option value="">All Teams</option>';
+        teams.forEach(team => {
+            teamFilter.innerHTML += `<option value="${team}">${team}</option>`;
+        });
+        teamFilter.value = currentValue;
+    }
+};
+
 // Auto-refresh every 30 seconds when connected
 setInterval(() => { if (isConnected) loadData(); }, 30000);
